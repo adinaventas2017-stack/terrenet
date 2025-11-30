@@ -1,0 +1,81 @@
+/* css/icons.css - SVG inline icons profesionales (Heroicons style) */
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4em;
+  height: 1.4em;
+  flex-shrink: 0;
+  vertical-align: -0.3em;
+}
+
+.icon svg {
+  width: 100%;
+  height: 100%;
+  stroke-width: 2;
+}
+
+/* Iconos por tipo */
+
+.icon-agua svg { stroke: #0ea5e9; }
+.icon-luz svg { stroke: #fbbf24; }
+.icon-saneamiento svg { stroke: #10b981; }
+.icon-banco svg { stroke: #8b5cf6; }
+.icon-financiacion svg { stroke: #ec4899; }
+.icon-superficie svg { stroke: #f97316; }
+.icon-destacado svg { stroke: #f59e0b; }
+.icon-titulo svg { stroke: #6b7280; }
+.icon-location svg { stroke: #06b6d4; }
+.icon-zona svg { stroke: #14b8a6; }
+.icon-operacion svg { stroke: #f97316; }
+.icon-precio svg { stroke: #b13333; }
+
+.required-indicator {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+/* Badges y chips con servicios */
+
+.services {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.service-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.7rem;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #166534;
+  transition: all 0.2s ease;
+}
+
+.service-chip:hover {
+  background: #dbeafe;
+  border-color: #0ea5e9;
+  color: #0c4a6e;
+}
+
+/* Características en detalle */
+
+.feature-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 0.65rem;
+  background: rgba(47, 133, 90, 0.08);
+  border: 1px solid rgba(47, 133, 90, 0.25);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1a5f3f;
+}

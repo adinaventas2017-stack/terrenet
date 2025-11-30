@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TerreNet – Debug</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 2rem;
+            background: #f9fafb;
+        }
+        h1 { color: #1f2937; margin-bottom: 1.5rem; }
+        .debug-section {
+            background: white;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+        button:hover { background: #1e40af; }
+        button:disabled { background: #9ca3af; cursor: not-allowed; }
+        
+        pre {
+            background: #111827;
+            color: #10b981;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.875rem;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .info { color: #3b82f6; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #f3f4f6;
+            font-weight: 600;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐛 Debug TerreNet System</h1>
+
+    <div class="debug-section">
+        <h2>Session & Auth</h2>
+        <button onclick="checkSession()">Check Session</button>
+        <button onclick="listAuthUsers()">List Auth Users (Admin Only)</button>
+        <button onclick="signOutAll()">Force Sign Out</button>
+        <pre id="sessionOutput">Waiting...</pre>
+    </div>
+
+    <div class="debug-section">
+        <h2>Database: usuarios table</h2>
+        <button onclick="listUsuarios()">Show All Usuarios</button>
+        <button onclick="countUsuarios()">Count Usuarios</button>
+        <pre id="usuariosOutput">Waiting...</pre>
+        <table id="usuariosTable"></table>
+    </div>
+
+    <div class="debug-section">
+        <h2>Database: admins table</h2>
+        <button onclick="listAdmins()">Show All Admins</button>
+        <pre id="adminsOutput">Waiting...</pre>
+        <table id="adminsTable"></table>
+    </div>
+
+    <div class="debug-section">
+        <h2>Database: terrenos table</h2>
+        <button onclick="listTerrenos()">Show All Terrenos</button>
+        <button onclick="countTerrenos()">Count Terrenos</button>
+        <pre id="terrenosOutput">Waiting...</pre>
+    </div>
+
+    <div class="debug-section">
+        <h2>Test User Login</h2>
+        <input type="email" id="testEmail" placeholder="email@example.com" style="padding: 0.5rem; width: 250px; border: 1px solid #e5e7eb; border-radius: 4px;">
+        <input type="password" id="testPassword" placeholder="password" style="padding: 0.5rem; width: 250px; border: 1px solid #e5e7eb; border-radius: 4px;">
+        <button onclick="testLogin()">Test Login</button>
+        <pre id="loginOutput">Waiting...</pre>
+    </div>
+
+    <div class="debug-section">
+        <h2>🔑 Hacer Admin</h2>
+        <p style="color: #6b7280; margin-bottom: 1rem;">Copia tu UserID de arriba y pégalo aquí para hacerte admin:</p>
+        <input type="text" id="userIdToAdmin" placeholder="UUID del usuario (ej: abc123...)" style="padding: 0.5rem; width: 350px; border: 1px solid #e5e7eb; border-radius: 4px;">
+        <button onclick="makeAdmin()">Hacer Admin</button>
+        <pre id="adminOutput">Esperando...</pre>
+    </div>
+
+    <script type="module">
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+        import { SUPABASE_URL, SUPABASE_ANON_KEY } from './js/config.js';
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        window.checkSession = async () => {
+            const output = document.getElementById('sessionOutput');
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                output.innerHTML = `<span class="info">Current Session:</span>\n${JSON.stringify(session, null, 2)}`;
+            } catch (err) {
+                output.innerHTML = `<span class="error">Error:</span> ${err.message}`;
+            }
+        };
+
+        window.signOutAll = async () => {
+            const output = document.getElementById('sessionOutput');
+            try {
+                await supabase.auth.signOut();
+                output.innerHTML = `<span class="success">✓ Session cleared</span>`;
+            } catch (err) {
+                output.innerHTML = `<span class="error">Error:</span> ${err.message}`;
+            }
+        };
+
+        window.listUsuarios = async () => {
+            const output = document.getElementById('usuariosOutput');
+            const table = document.getElementById('usuariosTable');
+            table.innerHTML = '';
+            try {
+                const { data, error } = await supabase
+                    .from('usuarios')
+                    .select('*');
+
+                if (error) {
+                    output.innerHTML = `<span class="error">Error:</span> ${error.message}`;
+                    return;
+                }
+
+                output.innerHTML = `<span class="success">✓ ${data.length} usuarios encontrados</span>`;
+                
+                if (data.length > 0) {
+                    const headers = Object.keys(data[0]);
+                    let html = '<thead><tr>';
+                    headers.forEach(h => html += `<th>${h}</th>`);
+                    html += '</tr></thead><tbody>';
+                    
+                    data.forEach(row => {
+                        html += '<tr>';
+                        headers.forEach(h => {
+                            const val = row[h];
+                            const display = typeof val === 'object' ? JSON.stringify(val) : String(val);
+                            html += `<td>${display.substring(0, 50)}</td>`;
+                        });
+                        html += '</tr>';
+                    });
+                    html += '</tbody>';
+                    table.innerHTML = html;
+                }
+            } catch (err) {
+                output.innerHTML = `<span class="error">Error:</span> ${err.message}`;
+            }
+        };
+
+        window.countUsuarios = async () => {
+            const output = document.getElementById('usuariosOutput');
+            try {
+                const { count, error } = await supabase
+                    .from('usuarios')
+                    .select('*', { count: 'exact', head: true });
+
+                output.innerHTML = `<span class="info">Total usuarios:</span> ${count}`;
+            } catch (err) {
+                output.innerHTML = `<span class="error">Error:</span> ${err.message}`;
+            }
+        };
+
+        window.listAdmins = async () => {
+            const output = document.getElementById('adminsOutput');
+            const table = document.getElementById('adminsTable');
+            table.innerHTML = '';
+            try {
+                const { data, error } = await supabase
+                    .from('admins')
+                    .select('*');
+
+                if (error) {
+                    output.innerHTML = `<span class="error">Error:</span> ${error.message}`;
+                    return;
+                }
+
+                output.innerHTML = `<span class="success">✓ ${data.length} admins encontrados</span>`;
+                
+                if (data.length > 0) {
+                    const headers = Object.keys(data[0]);
+                    let html = '<thead><tr>';
+                    headers.forEach(h => html += `<th>${h}</th>`);
+                    html += '</tr></thead><tbody>';
+                    
+                    data.forEach(row => {
+                        html += '<tr>';
+                        headers.forEach(h => {
+                            html += `<td>${row[h]}</td>`;
+                        });
+                        html += '</tr>';
+                    });
+                    html += '</tbody>';
+                    table.innerHTML = html;
+                }
+            } catch (err) {
+                output.innerHTML = `<span class="error">Error:</span> ${err.message}`;
+            }
+        };
+
+        window.listTerrenos = async () => {
+            const output = document.getElementById('terrenosOutput');
+            try {
+                const { data, error } = await supabase
+                    .from('terrenos')
+                    .select('id, titulo, user_id, created_at')
+                    .limit(10);
+
+                if (error) {
+                    output.innerHTML = `<span class="error">Error:</span> ${error.message}`;
+                    return;
+                }
+
+                output.innerHTML = `<span class="success">✓ ${data.length} terrenos (mostrando 10 últimos)</span>\n\n${JSON.stringify(data, null, 2)}`;
+            } catch (err) {
+                output.innerHTML = `<span class="error">Error:</span> ${err.message}`;
+            }
+        };
+
+        window.countTerrenos = async () => {
+            const output = document.getElementById('terrenosOutput');
+            try {
+                const { count } = await supabase
+                    .from('terrenos')
+                    .select('*', { count: 'exact', head: true });
+
+                output.innerHTML = `<span class="info">Total terrenos:</span> ${count}`;
+            } catch (err) {
+                output.innerHTML = `<span class="error">Error:</span> ${err.message}`;
+            }
+        };
+
+        window.testLogin = async () => {
+            const output = document.getElementById('loginOutput');
+            const email = document.getElementById('testEmail').value.trim();
+            const password = document.getElementById('testPassword').value;
+
+            if (!email || !password) {
+                output.innerHTML = `<span class="error">Email y password requeridos</span>`;
+                return;
+            }
+
+            output.innerHTML = 'Testing login...';
+
+            try {
+                // Test auth login
+                const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (authError) {
+                    output.innerHTML = `<span class="error">Auth Error:</span> ${authError.message}\n\n<span class="info">Buscando usuario en tabla...</span>`;
+                    
+                    // Try to find user in usuarios table
+                    const { data: usuarioData } = await supabase
+                        .from('usuarios')
+                        .select('*')
+                        .eq('email', email)
+                        .single();
+                    
+                    if (usuarioData) {
+                        output.innerHTML += `\n<span class="success">Usuario encontrado en tabla:</span>\n${JSON.stringify(usuarioData, null, 2)}`;
+                    } else {
+                        output.innerHTML += `\n<span class="error">Usuario NO encontrado en tabla usuarios</span>`;
+                    }
+                    return;
+                }
+
+                const userId = authData.user.id;
+                output.innerHTML = `<span class="success">✓ Auth login successful</span>\nUserID: ${userId}\n\n`;
+
+                // Check usuarios table
+                const { data: usuarioData, error: usuarioError } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+                if (usuarioError) {
+                    output.innerHTML += `<span class="error">Usuario table error:</span> ${usuarioError.message}`;
+                } else {
+                    output.innerHTML += `<span class="success">Usuario found:</span>\n${JSON.stringify(usuarioData, null, 2)}`;
+                }
+
+            } catch (err) {
+                output.innerHTML = `<span class="error">Unexpected error:</span> ${err.message}`;
+            }
+        };
+
+        window.makeAdmin = async () => {
+            const output = document.getElementById('adminOutput');
+            const userId = document.getElementById('userIdToAdmin').value.trim();
+
+            if (!userId) {
+                output.innerHTML = `<span class="error">Ingresa un UserID válido</span>`;
+                return;
+            }
+
+            output.innerHTML = `<span class="info">Haciendo admin...</span>`;
+
+            try {
+                // Verificar que el usuario existe
+                const { data: usuarioData } = await supabase
+                    .from('usuarios')
+                    .select('id, email, estado_verificacion')
+                    .eq('id', userId)
+                    .single();
+
+                if (!usuarioData) {
+                    output.innerHTML = `<span class="error">Usuario no encontrado</span>`;
+                    return;
+                }
+
+                if (usuarioData.estado_verificacion !== 'aprobado') {
+                    output.innerHTML = `<span class="error">El usuario debe estar aprobado primero</span>`;
+                    return;
+                }
+
+                // Insertar en tabla admins
+                const { data, error } = await supabase
+                    .from('admins')
+                    .insert({ uid: userId })
+                    .select();
+
+                if (error) {
+                    if (error.message.includes('duplicate')) {
+                        output.innerHTML = `<span class="error">Este usuario ya es admin</span>`;
+                    } else {
+                        output.innerHTML = `<span class="error">Error:</span> ${error.message}`;
+                    }
+                    return;
+                }
+
+                output.innerHTML = `<span class="success">✓ ¡Admin creado exitosamente!</span>\nUsuario: ${usuarioData.email}\nAhora puedes hacer login en admin.html`;
+            } catch (err) {
+                output.innerHTML = `<span class="error">Error:</span> ${err.message}`;
+            }
+        };
+
+
+        // Auto-check on load
+        window.checkSession();
+    </script>
+</body>
+</html>

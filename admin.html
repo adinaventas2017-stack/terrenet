@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TerreNet – Panel administrativo</title>
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+  <link rel="stylesheet" href="css/icons.css" />
+</head>
+<body>
+  <header>
+    <div style="display:flex;align-items:center;gap:0.8rem;">
+      <a href="index.html" class="brand" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:0.6rem;">
+        <img class="brand-mark" src="ChatGPT_Image_30_nov_2025__00_49_11-removebg-preview.png" alt="TerreNet logo" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" />
+        <div class="brand-text">
+          <div class="brand-title">TerreNet</div>
+        </div>
+      </a>
+      <h1 style="margin-left:0.6rem;">Panel administrativo</h1>
+    </div>
+    <div style="margin-top:0.8rem;display:flex;gap:0.6rem;align-items:center;">
+      <span id="sessionEmail" style="font-size:0.95rem;color:#374151;min-width:150px;text-align:right;"></span>
+      <button id="btnSignOut" type="button" class="btn btn-secondary">Salir</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Sección: Verificación de usuarios (panel admin) - ARRIBA DE TODO -->
+    <section class="card" id="verificacion-admin">
+      <h2>🔐 Verificación de Usuarios</h2>
+      <p style="font-size:0.82rem;color:#6b7280;margin-top:0.2rem;">Aquí podes aprobar o rechazar usuarios que se registraron. Solo los aprobados pueden entrar.</p>
+      <div id="usuariosPendientes"></div>
+    </section>
+
+    <section class="card">
+      <h2>Cargar / editar terreno</h2>
+      <p style="font-size:0.82rem;color:#6b7280;margin-top:0.2rem;">
+        Completá los datos del terreno. Incluí información normativa, superficies, imágenes y datos de contacto.
+      </p>
+
+      <form id="form-terreno">
+        <input type="hidden" id="terreno_id" />
+
+        <div class="form-grid">
+          <!-- DATOS CLAVE Y VISUALES -->
+          <div class="field-full section-title" style="font-size:1.1rem;display:flex;align-items:center;gap:0.5rem;">
+            <span>📝</span> Datos principales del terreno
+          </div>
+          <div>
+            <label for="titulo">
+              <span class="icon icon-titulo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18M3 12h18M3 18h18"></path>
+                </svg>
+              </span>
+              Título <span class="required-indicator">*</span>
+            </label>
+            <input type="text" id="titulo" required placeholder="Ej: Terreno industrial en Ruta 5" />
+          </div>
+          <div>
+            <label for="departamento">
+              <span class="icon icon-location">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z"></path>
+                </svg>
+              </span>
+              Departamento <span class="required-indicator">*</span>
+            </label>
+            <select id="departamento" required>
+              <option value="">Seleccionar</option>
+              <option value="Montevideo">Montevideo</option>
+              <option value="Canelones">Canelones</option>
+              <option value="Maldonado">Maldonado</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div>
+            <label for="zona">
+              <span class="icon icon-zona">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"></path>
+                </svg>
+              </span>
+              Zona / barrio
+            </label>
+            <input type="text" id="zona" placeholder="Ej: Pocitos, Solymar" />
+          </div>
+
+          <div>
+            <label for="direccion">Dirección aproximada</label>
+            <input type="text" id="direccion" placeholder="Ej: Ruta 5 km 20" />
+          </div>
+
+          <div>
+            <label for="lat">Latitud (GPS)</label>
+            <input type="number" id="lat" step="0.000001" placeholder="-34.9011" />
+          </div>
+
+          <div>
+            <label for="lng">Longitud (GPS)</label>
+            <input type="number" id="lng" step="0.000001" placeholder="-56.1645" />
+          </div>
+          <div>
+            <label for="operacion">
+              <span class="icon icon-operacion">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
+                </svg>
+              </span>
+              Operación <span class="required-indicator">*</span>
+            </label>
+            <select id="operacion" required>
+              <option value="venta">Venta</option>
+              <option value="alquiler">Alquiler</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="zona_clase">Clasificación de zona</label>
+            <select id="zona_clase">
+              <option value="media">Media</option>
+              <option value="premium">Premium</option>
+              <option value="periferica">Periférica</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="moneda">Moneda</label>
+            <select id="moneda">
+              <option value="USD">USD</option>
+              <option value="UYU">UYU</option>
+            </select>
+          </div>
+          <div>
+            <label for="precio">
+              <span class="icon icon-precio">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"></path>
+                </svg>
+              </span>
+              Precio (USD) <span class="required-indicator">*</span>
+            </label>
+            <input type="number" id="precio" min="0" step="1000" required />
+          </div>
+          <div>
+            <label for="superficie_total_m2">
+              <span class="icon icon-superficie">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"></path>
+                </svg>
+              </span>
+              Superficie total (m²) <span class="required-indicator">*</span>
+            </label>
+            <input type="number" id="superficie_total_m2" required min="1" step="1" />
+          </div>
+
+          <!-- Superficies -->
+          <div class="field-full section-title">Superficies</div>
+
+          <div>
+            <label for="superficie_catastral_m2">Superficie catastral (m²)</label>
+            <input type="number" id="superficie_catastral_m2" min="0" step="1" />
+          </div>
+
+          <!-- Descripción -->
+          <div class="field-full section-title">Descripción</div>
+
+          <div class="field-full">
+            <label for="descripcion">Descripción del terreno</label>
+            <textarea id="descripcion" placeholder="Descripción detallada del terreno, características, etc."></textarea>
+          </div>
+
+          <!-- Uso del suelo -->
+          <div class="field-full section-title">Uso del suelo y normativas</div>
+
+          <div>
+            <label for="uso_preferente_suelo">Uso preferente del suelo</label>
+            <select id="uso_preferente_suelo">
+              <option value="">(sin especificar)</option>
+              <option value="Residencial">Residencial</option>
+              <option value="Industrial">Industrial</option>
+              <option value="Mixto">Mixto</option>
+              <option value="Comercial">Comercial</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="subcategoria_uso">Subcategoría</label>
+            <input type="text" id="subcategoria_uso" placeholder="Ej: Subzona R1, R2, etc." />
+          </div>
+
+          <div>
+            <label for="area_diferenciada">Área diferenciada / estructurador</label>
+            <input type="text" id="area_diferenciada" placeholder="Ej: Área Diferenciada Melvin" />
+          </div>
+
+          <div>
+            <label for="regimen_gestion_suelo">Régimen de gestión del suelo</label>
+            <input type="text" id="regimen_gestion_suelo" />
+          </div>
+
+          <div class="checks">
+            <label><input type="checkbox" id="bien_cautelado" /> Bien cautelado</label>
+            <label><input type="checkbox" id="area_especial_consideracion" /> Área de especial consideración</label>
+            <label><input type="checkbox" id="reglamento_vis" /> Vivienda de Interés Social / reglamento específico</label>
+          </div>
+
+          <div class="field-full">
+            <label for="planes_especiales">Planes especiales</label>
+            <textarea id="planes_especiales" placeholder="Planes o instrumentos específicos que afecten al padrón."></textarea>
+          </div>
+
+          <!-- Parámetros constructivos -->
+          <div class="field-full section-title">Parámetros constructivos (altura y ocupación)</div>
+
+          <div>
+            <label for="altura_maxima_m">Altura máxima (m)</label>
+            <input type="number" id="altura_maxima_m" min="0" step="0.1" />
+          </div>
+
+          <div>
+            <label for="altura_minima_m">Altura mínima (m)</label>
+            <input type="number" id="altura_minima_m" min="0" step="0.1" />
+          </div>
+
+          <div>
+            <label for="altura_maxima_pisos">Altura máxima (pisos)</label>
+            <input type="number" id="altura_maxima_pisos" min="0" step="1" />
+          </div>
+
+          <div>
+            <label for="fos">FOS (ocupación suelo)</label>
+            <input type="number" id="fos" min="0" step="0.01" placeholder="Ej: 0.6" />
+          </div>
+
+          <div>
+            <label for="retiro_frontal_m">Retiro frontal (m)</label>
+            <input type="number" id="retiro_frontal_m" min="0" step="0.1" />
+          </div>
+
+          <div>
+            <label for="retiro_lateral_m">Retiro lateral (m)</label>
+            <input type="number" id="retiro_lateral_m" min="0" step="0.1" />
+          </div>
+
+          <div>
+            <label for="retiro_posterior_m">Retiro posterior (m)</label>
+            <input type="number" id="retiro_posterior_m" min="0" step="0.1" />
+          </div>
+
+          <div class="field-full">
+            <label for="galibos">Gálibos / volumetría</label>
+            <textarea id="galibos" placeholder="Información sobre limitaciones volumétricas, ángulos, etc."></textarea>
+          </div>
+
+          <!-- Restricciones adicionales -->
+          <div class="field-full section-title">Restricciones adicionales</div>
+
+          <div class="field-full">
+            <label for="afectaciones_ochava">Afectaciones por ochava</label>
+            <textarea id="afectaciones_ochava" placeholder="Ej: Art. D.223.128, D.223.142.1, etc."></textarea>
+          </div>
+
+          <div class="field-full">
+            <label for="afectaciones_volumetricas">Otras afectaciones volumétricas</label>
+            <textarea id="afectaciones_volumetricas"></textarea>
+          </div>
+
+          <!-- Servicios y condiciones -->
+          <div class="field-full section-title">Servicios y condiciones</div>
+
+          <div class="checks field-full">
+            <label><input type="checkbox" id="agua" /> Agua</label>
+            <label><input type="checkbox" id="luz" /> Luz</label>
+            <label><input type="checkbox" id="saneamiento" /> Saneamiento</label>
+            <label><input type="checkbox" id="acepta_banco" /> Acepta banco</label>
+            <label><input type="checkbox" id="financiacion" /> Financiación</label>
+          </div>
+
+          <!-- Estado y publicación -->
+          <div class="field-full section-title">Estado y publicación</div>
+
+          <div>
+            <label for="estado">Estado</label>
+            <select id="estado">
+              <option value="disponible">Disponible</option>
+              <option value="vendido">Vendido</option>
+              <option value="alquilado">Alquilado</option>
+              <option value="pendiente">Pendiente</option>
+            </select>
+          </div>
+
+          <div class="checks field-full">
+            <label><input type="checkbox" id="publicado" /> Publicado</label>
+            <label><input type="checkbox" id="destacado" /> Destacado en inicio</label>
+          </div>
+
+          <!-- Imágenes -->
+          <div class="field-full section-title">Imágenes</div>
+          <div class="field-full section-sub">
+            Podés arrastrar y soltar imágenes o seleccionarlas. También podés agregar URLs manualmente.
+          </div>
+
+          <div class="field-full">
+            <div id="dropzone" class="dropzone">
+              Soltá imágenes aquí o hacé clic para elegir archivos
+            </div>
+            <input type="file" id="file-input" accept="image/*" multiple style="display:none;" />
+            <div class="preview-grid" id="preview-grid"></div>
+          </div>
+
+          <div>
+            <label for="imagen_url_manual">Agregar URL de imagen</label>
+            <input type="text" id="imagen_url_manual" placeholder="https://..." />
+          </div>
+
+          <div>
+            <label>&nbsp;</label>
+            <button type="button" class="btn btn-secondary" id="btn-add-url">Agregar URL</button>
+          </div>
+
+          <!-- Contacto -->
+          <div class="field-full section-title">Contacto</div>
+
+          <div>
+            <label for="contacto_nombre">Nombre de contacto</label>
+            <input type="text" id="contacto_nombre" placeholder="Ej: Juan Pérez" />
+          </div>
+
+          <div>
+            <label for="contacto_telefono">Teléfono (WhatsApp)</label>
+            <input type="text" id="contacto_telefono" placeholder="Ej: +598 94 000 000" />
+          </div>
+
+          <div>
+            <label for="contacto_email">Email</label>
+            <input type="email" id="contacto_email" placeholder="Ej: juan@inmobiliaria.com" />
+          </div>
+
+          <div>
+            <label for="contacto_avatar_url">URL foto contacto</label>
+            <input type="text" id="contacto_avatar_url" placeholder="URL de avatar del asesor" />
+          </div>
+
+          <!-- Enlaces externos -->
+          <div class="field-full section-title">Enlaces externos del aviso</div>
+
+          <div>
+            <label for="link_principal">Link principal</label>
+            <input type="text" id="link_principal" placeholder="Página propia / ficha principal" />
+          </div>
+
+          <div>
+            <label for="link_mercadolibre">Link Mercado Libre</label>
+            <input type="text" id="link_mercadolibre" placeholder="URL del aviso en Mercado Libre" />
+          </div>
+
+          <div>
+            <label for="link_otro_portal">Link otro portal</label>
+            <input type="text" id="link_otro_portal" placeholder="InfoCasas, X inmobiliaria, etc." />
+          </div>
+
+          <!-- Acciones -->
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" id="btn-nuevo">Nuevo</button>
+            <button type="button" class="btn btn-secondary" id="btn-sugerir">Precio sugerido</button>
+            <button type="submit" class="btn btn-primary">Guardar terreno</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section class="table-card">
+      <h2>Terrenos cargados</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Ubicación</th>
+            <th>Sup.</th>
+            <th>Operación</th>
+            <th>Precio</th>
+            <th>Publicado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="lista-terrenos"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Admin JS -->
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

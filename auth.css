@@ -1,0 +1,161 @@
+/* Estilos para registro y pantalla de verificación */
+:root{
+  --bg:#ffffff;
+  --muted:#6b7280;
+  --primary:#0b74ff;
+  --card:#f8fafc;
+  --success:#16a34a;
+  --danger:#dc2626;
+}
+body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background:var(--bg); color:#111827; padding:1.2rem;}
+
+/* LOGIN FORM - GRANDE Y CENTRADO */
+#auth-area{
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  z-index: 9999 !important;
+  padding: 2rem !important;
+}
+
+#auth-area #loginForm {
+  background: white !important;
+  border-radius: 16px !important;
+  padding: 3rem !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important;
+  max-width: 420px !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1.2rem !important;
+}
+
+#auth-area #loginForm::before {
+  content: '🏢';
+  font-size: 3rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+#auth-area #loginForm h2 {
+  text-align: center;
+  font-size: 1.8rem;
+  margin: 0;
+  color: #111827;
+}
+
+#auth-area #loginForm p {
+  text-align: center;
+  color: var(--muted);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+#auth-area #loginEmail,
+#auth-area #loginPass {
+  padding: 0.9rem !important;
+  border: 2px solid #e5e7eb !important;
+  border-radius: 10px !important;
+  font-size: 1rem !important;
+  transition: all 0.3s ease;
+}
+
+#auth-area #loginEmail:focus,
+#auth-area #loginPass:focus {
+  outline: none !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(11, 116, 255, 0.1) !important;
+}
+
+#auth-area #btnSignIn {
+  background: linear-gradient(135deg, var(--primary), #0052cc) !important;
+  color: white !important;
+  padding: 1rem !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+}
+
+#auth-area #btnSignIn:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 30px rgba(11, 116, 255, 0.3) !important;
+}
+
+#auth-area #btnSignIn:disabled {
+  opacity: 0.7 !important;
+  cursor: not-allowed !important;
+}
+
+/* CUANDO ESTÁ LOGUEADO - OCULTAR */
+#auth-area #sessionInfo {
+  position: fixed !important;
+  top: 1rem !important;
+  right: 1rem !important;
+  background: rgba(255,255,255,0.95) !important;
+  padding: 0.8rem 1.2rem !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  gap: 0.8rem !important;
+  align-items: center !important;
+  z-index: 10000 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+#auth-area #btnSignOut {
+  background: var(--danger) !important;
+  color: white !important;
+  border: none !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+}
+
+#auth-area {
+  display: none !important;
+}
+
+#auth-area[data-authenticated="false"] {
+  display: flex !important;
+}
+
+/* Cuando se autentica, mostrar header y main */
+#auth-area[data-authenticated="true"] {
+  display: none !important;
+}
+
+#auth-area[data-authenticated="true"] ~ header {
+  display: block !important;
+}
+
+#auth-area[data-authenticated="true"] ~ main {
+  display: block !important;
+}
+
+.registro-container, .admin-verificacion-container{max-width:820px;margin:0 auto;background:var(--card);padding:1.2rem;border-radius:10px;box-shadow:0 4px 18px rgba(2,6,23,0.06)}
+form{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem}
+form label{grid-column:span 2;font-size:0.9rem;color:var(--muted)}
+form input[type=text], form input[type=email], form input[type=url], form select{grid-column:span 2;padding:0.6rem;border:1px solid #e5e7eb;border-radius:6px}
+form input[type=checkbox]{width:18px;height:18px}
+form button{grid-column:span 2;background:var(--primary);color:white;border:none;padding:0.7rem;border-radius:8px;cursor:pointer}
+.mensaje{grid-column:span 2;margin-top:0.4rem}
+.usuario-card{border:1px solid #e6edf3;padding:0.8rem;border-radius:8px;margin-bottom:0.6rem;background:white;display:flex;flex-direction:column;gap:0.35rem}
+.usuario-card small{color:var(--muted)}
+.usuario-actions{margin-top:0.4rem;display:flex;gap:0.5rem}
+.btn-aprobar{background:var(--success);color:white;padding:0.45rem 0.7rem;border-radius:6px;border:none;cursor:pointer}
+.btn-rechazar{background:var(--danger);color:white;padding:0.45rem 0.7rem;border-radius:6px;border:none;cursor:pointer}
+.loader{width:16px;height:16px;border-radius:50%;border:2px solid rgba(0,0,0,0.1);border-top-color:var(--primary);animation:spin 1s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media (max-width:720px){
+  form{grid-template-columns:1fr}
+  form label, form input, form button{grid-column:span 1}
+}

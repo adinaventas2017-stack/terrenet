@@ -1,0 +1,53 @@
+<!-- terreno.html - Página de detalle individual del terreno
+     
+     Estilos:
+     - detail.css: Estilos dedicados a esta página (galería, sections, responsive)
+     - icons.css: Iconos de servicios y elementos visuales
+     - Heroicons CDN: Iconografía adicional
+     
+     Scripts:
+     - detail.js: Renderizado dinámico con Supabase
+-->
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>TerreNet – Detalle del terreno</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/detail.css" />
+  <link rel="stylesheet" href="css/icons.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/heroicons@2/dist/heroicons.min.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <img class="brand-mark" src="ChatGPT_Image_30_nov_2025__00_49_11-removebg-preview.png" alt="TerreNet logo" />
+        <div class="brand-text">
+          <div class="brand-title">TerreNet</div>
+          <div class="brand-subtitle">Detalle del terreno</div>
+        </div>
+      </a>
+      <button class="nav-toggle" aria-label="Abrir menú">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="main-nav">
+        <a href="index.html">Inicio</a>
+        <a href="terreno.html">Detalle terreno</a>
+        <a href="admin.html">Panel admin</a>
+        <a href="registro.html">Registro</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div id="detail-root" class="detail-layout" aria-live="polite"></div>
+    <div id="detail-map-container"></div>
+    <div id="detail-empty" class="empty" aria-live="assertive"></div>
+  </main>
+
+  <script type="module" src="js/detail.js"></script>
+</body>
+</html>
