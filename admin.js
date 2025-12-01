@@ -2,6 +2,8 @@
 import { getSupabaseClient, requireAdminAuth, logout } from "./auth.js";
 import { setupMenu } from "./menu.js";
 import { SUPABASE_STORAGE_BUCKET } from "./config.js";
+import { showStatus, confirmDialog, logDebug, logWarn, logError } from "./utils.js";
+import { setupDropzone, uploadImagesToSupabase, renderPreview } from "./images.js";
 
 const form = document.getElementById("form-terreno");
 const lista = document.getElementById("lista-terrenos");
@@ -18,28 +20,7 @@ let imagenesActuales = [];
 let DB_COLUMNS = null;
 
 function actualizarPreview() {
-  previewGrid.innerHTML = "";
-  imagenesActuales.forEach((url, index) => {
-    const item = document.createElement("div");
-    item.className = "preview-item";
-
-    const img = document.createElement("img");
-    img.src = url;
-    img.alt = `Imagen ${index + 1}`;
-
-    const btn = document.createElement("button");
-    btn.className = "preview-remove";
-    btn.type = "button";
-    btn.textContent = "×";
-    btn.addEventListener("click", () => {
-      imagenesActuales.splice(index, 1);
-      actualizarPreview();
-    });
-
-    item.appendChild(img);
-    item.appendChild(btn);
-    previewGrid.appendChild(item);
-  });
+  renderPreview({ containerEl: previewGrid, urls: imagenesActuales, onRemove: (idx) => { imagenesActuales.splice(idx,1); actualizarPreview(); } });
 }
 
 function agregarImagenUrl(url) {
@@ -57,68 +38,24 @@ btnAddUrl.addEventListener("click", () => {
   imagenUrlManual.value = "";
 });
 
-dropzone.addEventListener("click", () => fileInput.click());
-
-dropzone.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  dropzone.classList.add("dragover");
-});
-
-dropzone.addEventListener("dragleave", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  dropzone.classList.remove("dragover");
-});
-
-dropzone.addEventListener("drop", async (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  dropzone.classList.remove("dragover");
-  if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
-    const files = Array.from(e.dataTransfer.files);
-    await manejarArchivos(files);
-  }
-});
-
-fileInput.addEventListener("change", async () => {
-  const files = Array.from(fileInput.files || []);
-  await manejarArchivos(files);
-  fileInput.value = "";
-});
-
-async function manejarArchivos(files) {
-  const supabase = getSupabaseClient();
-  
-  for (const file of files) {
-    if (!file.type.startsWith("image/")) continue;
-    
+let teardownDropzone = null;
+if (dropzone && fileInput) {
+  teardownDropzone = setupDropzone({ dropzoneEl: dropzone, fileInputEl: fileInput, onFiles: async (files) => {
     try {
-      const path = `uploads/${Date.now()}-${file.name}`;
-      const { data, error } = await supabase.storage
-        .from(SUPABASE_STORAGE_BUCKET)
-        .upload(path, file, { upsert: false });
-      
-      if (error) {
-        console.error("Upload error:", error);
-        alert(`Error subiendo imagen: ${error.message}. Asegúrate que el bucket "terrenos" existe y está públicamente accesible.`);
-        continue;
+      const urls = await uploadImagesToSupabase(files);
+      if (!urls || urls.length === 0) {
+        showStatus('No se subieron imágenes.', { type: 'error' });
+        return;
       }
-
-      // Get public URL
-      const { data: publicData } = supabase.storage
-        .from(SUPABASE_STORAGE_BUCKET)
-        .getPublicUrl(path);
-      
-      if (publicData?.publicUrl) {
-        agregarImagenUrl(publicData.publicUrl);
-      }
+      urls.forEach(u => agregarImagenUrl(u));
+      actualizarPreview();
     } catch (err) {
-      console.error("Upload exception:", err);
-      alert("Error inesperado subiendo imagen.");
+      logError('Error subiendo imágenes', err, { userMessage: 'Error subiendo imágenes.' });
     }
-  }
+  }});
 }
+
+// Image uploads managed via shared images module
 
 function getFormDataObject() {
   const id = document.getElementById("terreno_id").value || null;
@@ -286,7 +223,7 @@ function sugerirPrecioDesdeForm() {
 btnSugerir.addEventListener("click", () => {
   const estimado = sugerirPrecioDesdeForm();
   if (!estimado) {
-    alert("Poné al menos departamento, superficie total y tipo de zona para estimar.");
+    showStatus("Poné al menos departamento, superficie total y tipo de zona para estimar.", { type: 'error' });
     return;
   }
   document.getElementById("precio").value = estimado;
@@ -320,7 +257,7 @@ form.addEventListener("submit", async (e) => {
   const data = getFormDataObject();
 
   if (!data.titulo || !data.departamento || !data.operacion || !data.superficie_total_m2) {
-    alert("Completá al menos título, departamento, operación y superficie total.");
+    showStatus("Completá al menos título, departamento, operación y superficie total.", { type: 'error' });
     return;
   }
 
@@ -336,10 +273,10 @@ form.addEventListener("submit", async (e) => {
 
   // Log any keys dropped for debugging
   const dropped = Object.keys(payload).filter(k => !allowedSet.has(k));
-  if (dropped.length > 0) console.warn("Dropped fields not in DB:", dropped);
+  if (dropped.length > 0) logWarn("Dropped fields not in DB:", dropped);
 
   if (Object.keys(payloadFiltered).length === 0) {
-    alert('No hay campos válidos para guardar. Verifica el formulario y la configuración del backend.');
+    showStatus('No hay campos válidos para guardar. Verifica el formulario y la configuración del backend.', { type: 'error' });
     return;
   }
 
@@ -353,10 +290,8 @@ form.addEventListener("submit", async (e) => {
   }
 
   if (error) {
-    console.error("Error completo:", error);
-    // Try to give useful info to the user
     const errMsg = (error?.message) ? error.message : JSON.stringify(error);
-    alert("Error guardando terreno: " + errMsg);
+    logError(error, { userMessage: 'Error guardando terreno: ' + errMsg });
     return;
   }
 
@@ -372,8 +307,7 @@ async function cargarTerrenos() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error(error);
-    alert("Error cargando terrenos.");
+    logError(error, { userMessage: 'Error cargando terrenos.' });
     return;
   }
 
@@ -427,12 +361,12 @@ async function cargarTerrenos() {
     btnDel.className = "btn-small";
     btnDel.textContent = "Eliminar";
     btnDel.addEventListener("click", async () => {
-      if (!confirm("¿Eliminar este terreno?")) return;
+      const ok = await confirmDialog({ title: 'Eliminar terreno', message: '¿Eliminar este terreno?', confirmLabel: 'Eliminar', cancelLabel: 'Cancelar' });
+      if (!ok) return;
       const supabase = getSupabaseClient();
       const { error: delError } = await supabase.from("terrenos").delete().eq("id", t.id);
       if (delError) {
-        console.error(delError);
-        alert("Error eliminando.");
+        logError(delError, { userMessage: 'Error eliminando.' });
         return;
       }
       await cargarTerrenos();
@@ -447,7 +381,7 @@ async function cargarTerrenos() {
   // If we detected rows, use the first row keys as DB_COLUMNS
   if (Array.isArray(data) && data.length > 0) {
     DB_COLUMNS = new Set(Object.keys(data[0]));
-    console.debug("DB_COLUMNS detected:", [...DB_COLUMNS].sort());
+    logDebug("DB_COLUMNS detected:", [...DB_COLUMNS].sort());
   }
 }
 
@@ -455,7 +389,7 @@ function cargarEnFormulario(t) {
   // Ensure we have DB columns from the current item (helps if no rows were present at cargarTerrenos)
   if (!DB_COLUMNS && t && typeof t === 'object') {
     DB_COLUMNS = new Set(Object.keys(t));
-    console.debug("DB_COLUMNS detected from loaded item:", [...DB_COLUMNS].sort());
+    logDebug("DB_COLUMNS detected from loaded item:", [...DB_COLUMNS].sort());
   }
   document.getElementById("terreno_id").value = t.id;
   document.getElementById("titulo").value = t.titulo || "";
@@ -564,7 +498,7 @@ async function loadUsuariosPendientes(){
       });
   } catch(err){
     contRoot.innerHTML = '<p class="status-error">Error cargando usuarios pendientes.</p>';
-    console.error(err);
+    logError(err);
   }
 }
 
@@ -585,13 +519,13 @@ async function cambiarEstado(id, estado, cardEl, btnAccept, btnReject){
       .select();
 
     if(error){
-      console.error('Supabase update error', error);
-      alert('Error al actualizar usuario: ' + (error.message || JSON.stringify(error)));
+      const msg = 'Error al actualizar usuario: ' + (error.message || JSON.stringify(error));
+      logError(error, { userMessage: msg });
       return;
     }
 
     if(!data || data.length === 0){
-      alert('No se actualizó el registro. Revisa RLS.');
+      showStatus('No se actualizó el registro. Revisa RLS.', { type: 'error' });
       return;
     }
 
@@ -608,8 +542,7 @@ async function cambiarEstado(id, estado, cardEl, btnAccept, btnReject){
       if(cardEl && cardEl.parentNode) cardEl.parentNode.removeChild(cardEl);
     }, 2000);
   } catch(err){
-    alert('Error al actualizar usuario: ' + (err.message || err));
-    console.error(err);
+    logError(err, { userMessage: 'Error al actualizar usuario: ' + (err.message || err) });
   } finally {
     if(btnAccept){ btnAccept.disabled = false; btnAccept.innerHTML = origA; }
     if(btnReject){ btnReject.disabled = false; btnReject.innerHTML = origR; }
@@ -707,8 +640,7 @@ async function loadUsersWithPlans(){
             btnSave.textContent = 'Guardado';
             setTimeout(() => btnSave.textContent = 'Guardar', 1500);
           } catch (err) {
-            alert('Error guardando plan: ' + (err.message || err));
-            console.error(err);
+            logError(err, { userMessage: 'Error guardando plan: ' + (err.message || err) });
           } finally {
             btnSave.disabled = false;
           }
@@ -726,7 +658,7 @@ async function loadUsersWithPlans(){
       cont.appendChild(table);
   
     } catch (err) {
-      console.error('Error cargando perfiles:', err);
+      logError('Error cargando perfiles:', err);
       cont.innerHTML = '<p class="status-error">Error cargando perfiles.</p>';
     }
 }

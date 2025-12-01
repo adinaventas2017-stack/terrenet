@@ -1,0 +1,15 @@
+{
+  "name": "terrenet-server-examples",
+  "version": "0.1.0",
+  "description": "Example server components for TerreNet: sitemap and SSR examples",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.86.0",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2"
+  }
+}

@@ -2,7 +2,8 @@
 import { getSupabaseClient, requireAuth, logout } from "./auth.js";
 import { setupMenu } from "./menu.js";
 import { SUPABASE_STORAGE_BUCKET } from "./config.js";
-import { formatPrecio, formatSuperficie, placeholderImageUrl } from "./utils.js";
+import { formatPrecio, formatSuperficie, placeholderImageUrl, showStatus, confirmDialog, logDebug, logWarn, logError } from "./utils.js";
+import { setupDropzone, uploadImagesToSupabase, renderPreview } from "./images.js";
 
 const form = document.getElementById("form-terreno");
 const lista = document.getElementById("lista-terrenos");
@@ -19,28 +20,7 @@ let DB_COLUMNS = null;
 let currentUserId = null;
 
 function actualizarPreview() {
-  previewGrid.innerHTML = "";
-  imagenesActuales.forEach((url, index) => {
-    const item = document.createElement("div");
-    item.className = "preview-item";
-
-    const img = document.createElement("img");
-    img.src = url;
-    img.alt = `Imagen ${index + 1}`;
-
-    const btn = document.createElement("button");
-    btn.className = "preview-remove";
-    btn.type = "button";
-    btn.textContent = "×";
-    btn.addEventListener("click", () => {
-      imagenesActuales.splice(index, 1);
-      actualizarPreview();
-    });
-
-    item.appendChild(img);
-    item.appendChild(btn);
-    previewGrid.appendChild(item);
-  });
+  renderPreview({ containerEl: previewGrid, urls: imagenesActuales, onRemove: (idx) => { imagenesActuales.splice(idx,1); actualizarPreview(); } });
 }
 
 function agregarImagenUrl(url) {
@@ -51,74 +31,33 @@ function agregarImagenUrl(url) {
   }
 }
 
-dropzone.addEventListener("click", () => fileInput.click());
-
-dropzone.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  dropzone.classList.add("dragover");
-});
-
-dropzone.addEventListener("dragleave", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  dropzone.classList.remove("dragover");
-});
-
-dropzone.addEventListener("drop", async (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  dropzone.classList.remove("dragover");
-  if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
-    const files = Array.from(e.dataTransfer.files);
-    await manejarArchivos(files);
-  }
-});
-
-fileInput.addEventListener("change", async () => {
-  const files = Array.from(fileInput.files || []);
-  await manejarArchivos(files);
-  fileInput.value = "";
-});
+// Wire dropzone using shared helper
+let teardownDropzone = null;
+if (dropzone && fileInput) {
+  teardownDropzone = setupDropzone({ dropzoneEl: dropzone, fileInputEl: fileInput, onFiles: async (files) => {
+    try {
+      const urls = await uploadImagesToSupabase(files);
+      if (!urls || urls.length === 0) {
+        showStatus('No se subieron imágenes.', { type: 'error' });
+        return;
+      }
+      urls.forEach(u => agregarImagenUrl(u));
+      actualizarPreview();
+    } catch (err) {
+      logError('Error subiendo imágenes', err, { userMessage: 'Error subiendo imágenes.' });
+    }
+  }});
+}
 
 btnAddUrl.addEventListener("click", () => {
   const url = imagenUrlManual.value.trim();
   if (!url) return;
   agregarImagenUrl(url);
   imagenUrlManual.value = "";
+  actualizarPreview();
 });
 
-async function manejarArchivos(files) {
-  const supabase = getSupabaseClient();
-  
-  for (const file of files) {
-    if (!file.type.startsWith("image/")) continue;
-    
-    try {
-      const path = `uploads/${Date.now()}-${file.name}`;
-      const { data, error } = await supabase.storage
-        .from(SUPABASE_STORAGE_BUCKET)
-        .upload(path, file, { upsert: false });
-      
-      if (error) {
-        console.error("Upload error:", error);
-        alert(`Error subiendo imagen: ${error.message}`);
-        continue;
-      }
-
-      const { data: publicData } = supabase.storage
-        .from(SUPABASE_STORAGE_BUCKET)
-        .getPublicUrl(path);
-      
-      if (publicData?.publicUrl) {
-        agregarImagenUrl(publicData.publicUrl);
-      }
-    } catch (err) {
-      console.error("Upload exception:", err);
-      alert("Error inesperado subiendo imagen.");
-    }
-  }
-}
+// Image uploads handled by shared images.js helpers
 
 // Split form parsing into small focused helpers to improve readability and validation
 function getUbicacionFromForm() {
@@ -279,7 +218,7 @@ form.addEventListener("submit", async (e) => {
       errorBox.classList.remove('hidden');
       errorBox.textContent = "Completá al menos título, departamento, operación y superficie total.";
     } else {
-      alert("Completá al menos título, departamento, operación y superficie total.");
+      showStatus("Completá al menos título, departamento, operación y superficie total.", { type: 'error' });
     }
     return;
   }
@@ -298,10 +237,10 @@ form.addEventListener("submit", async (e) => {
   );
 
   const dropped = Object.keys(payload).filter(k => !allowedSet.has(k));
-  if (dropped.length > 0) console.warn("Dropped fields not in DB:", dropped);
+  if (dropped.length > 0) logWarn("Dropped fields not in DB:", dropped);
 
   if (Object.keys(payloadFiltered).length === 0) {
-    alert('No hay campos válidos para guardar.');
+    showStatus('No hay campos válidos para guardar.', { type: 'error' });
     return;
   }
 
@@ -319,7 +258,7 @@ form.addEventListener("submit", async (e) => {
         .single();
 
       if (perfilError) {
-        console.warn('No se pudo leer perfil del usuario:', perfilError);
+        logWarn('No se pudo leer perfil del usuario:', perfilError);
       }
 
       const userPlan = perfil?.plan || 'FREE';
@@ -333,12 +272,12 @@ form.addEventListener("submit", async (e) => {
           errorBox.classList.remove('hidden');
           errorBox.textContent = 'Tu plan actual no permite más publicaciones. Escribinos para ampliar tu plan.';
         } else {
-          alert('Tu plan actual no permite más publicaciones. Escribinos para ampliar tu plan.');
+          showStatus('Tu plan actual no permite más publicaciones. Escribinos para ampliar tu plan.', { type: 'error' });
         }
         return;
       }
     } catch (e) {
-      console.error('Error comprobando plan usuario:', e);
+      logError('Error comprobando plan usuario:', e);
       // proceed to attempt insert anyway (fail later if required)
     }
 
@@ -347,13 +286,14 @@ form.addEventListener("submit", async (e) => {
   }
 
   if (error) {
-    console.error("Error completo:", error);
     const errMsg = (error?.message) ? error.message : JSON.stringify(error);
+    // If there's an inline form error box, set it and avoid duplicate global status
     if (errorBox) {
       errorBox.classList.remove('hidden');
       errorBox.textContent = "Error guardando terreno: " + errMsg;
+      logError(error, { userMessage: 'Error guardando terreno: ' + errMsg, showUser: false });
     } else {
-      alert("Error guardando terreno: " + errMsg);
+      logError(error, { userMessage: 'Error guardando terreno: ' + errMsg });
     }
     return;
   }
@@ -378,8 +318,7 @@ async function cargarTerrenos() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error(error);
-    alert("Error cargando terrenos.");
+    logError(error, { userMessage: 'Error cargando terrenos.' });
     return;
   }
 
@@ -433,12 +372,12 @@ async function cargarTerrenos() {
     btnDel.className = "btn-small";
     btnDel.textContent = "Eliminar";
     btnDel.addEventListener("click", async () => {
-      if (!confirm("¿Eliminar este terreno?")) return;
+      const ok = await confirmDialog({ title: 'Eliminar terreno', message: '¿Eliminar este terreno?', confirmLabel: 'Eliminar', cancelLabel: 'Cancelar' });
+      if (!ok) return;
       const supabase = getSupabaseClient();
       const { error: delError } = await supabase.from("terrenos").delete().eq("id", t.id);
       if (delError) {
-        console.error(delError);
-        alert("Error eliminando.");
+        logError(delError, { userMessage: 'Error eliminando.' });
         return;
       }
       await cargarTerrenos();
@@ -452,14 +391,14 @@ async function cargarTerrenos() {
 
   if (Array.isArray(data) && data.length > 0) {
     DB_COLUMNS = new Set(Object.keys(data[0]));
-    console.debug("DB_COLUMNS detected:", [...DB_COLUMNS].sort());
+    logDebug("DB_COLUMNS detected:", [...DB_COLUMNS].sort());
   }
 }
 
 function cargarEnFormulario(t) {
   if (!DB_COLUMNS && t && typeof t === 'object') {
     DB_COLUMNS = new Set(Object.keys(t));
-    console.debug("DB_COLUMNS detected from loaded item:", [...DB_COLUMNS].sort());
+    logDebug("DB_COLUMNS detected from loaded item:", [...DB_COLUMNS].sort());
   }
   document.getElementById("terreno_id").value = t.id;
   document.getElementById("titulo").value = t.titulo || "";

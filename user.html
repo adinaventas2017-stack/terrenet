@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TerreNet – Mi Panel</title>
+  <title>Panel de usuario – TerreNet</title>
+  <meta name="robots" content="noindex, nofollow" />
   <link rel="stylesheet" href="css/reset.css" />
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/main.css" />
@@ -21,10 +22,10 @@
           <div class="brand-subtitle">Terrenos en venta y alquiler</div>
         </div>
       </a>
-      <button class="nav-toggle" aria-label="Abrir menú">
+      <button class="nav-toggle" aria-label="Abrir menú" aria-controls="mainNav" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
-      <nav class="main-nav">
+      <nav id="mainNav" class="main-nav" role="navigation" aria-label="Main navigation">
         <a href="index.html">Inicio</a>
         <a href="terreno.html">Detalle terreno</a>
         <a href="registro.html">Registro</a>
@@ -390,6 +391,7 @@
 
     <section class="table-card">
       <h2>Mis Terrenos Cargados</h2>
+      <div class="table-responsive">
       <table>
         <thead>
           <tr>
@@ -404,6 +406,7 @@
         </thead>
         <tbody id="lista-terrenos"></tbody>
       </table>
+      </div>
     </section>
   </main>
 
@@ -411,12 +414,12 @@
   <script type="module" src="js/user.js"></script>
 
   <!-- Login modal (shared) -->
-  <div id="loginModal" class="modal hidden">
+  <div id="loginModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="loginModalLabel">
     <div class="modal-overlay"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Acceso a Panel</h2>
-        <button id="btnCloseLogin" class="btn-close">&times;</button>
+        <h2 id="loginModalLabel">Acceso a Panel</h2>
+        <button id="btnCloseLogin" class="btn-close" aria-label="Cerrar">&times;</button>
       </div>
       <form id="loginForm" class="login-form">
         <div class="form-group">

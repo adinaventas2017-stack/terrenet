@@ -2,7 +2,7 @@
 import { getSupabaseClient } from "./auth.js";
 import { setupMenu } from "./menu.js";
 import "./index-auth.js"; // Manejo de login
-import { formatPrecio, formatSuperficie, placeholderImageUrl, showLoading, hideLoading, createServiceChip } from "./utils.js";
+import { formatPrecio, formatSuperficie, placeholderImageUrl, showLoading, hideLoading, createServiceChip, logError } from "./utils.js";
 
 // Heroicons SVG helper para servicios
 function getServiceIcon(serviceName) {
@@ -322,7 +322,7 @@ async function loadTerrenosFromForm(event) {
   hideLoading(resultsEl);
 
   if (error) {
-    console.error(error);
+    logError(error);
     emptyEl.textContent = "Error cargando terrenos.";
     resultsEl.innerHTML = "";
     renderPagination(0);

@@ -3,7 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TerreNet – Encontrá tu próximo terreno</title>
+  <title>TerreNet – Portal de terrenos en Uruguay</title>
+  <meta name="description" content="Buscá, compará y publicá terrenos en Montevideo, Canelones y todo Uruguay. TerreNet es la herramienta para inmobiliarias, agentes y propietarios que trabajan con terrenos." />
+  <link rel="canonical" href="https://terrenet.uy/" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="TerreNet – Portal de terrenos en Uruguay" />
+  <meta property="og:description" content="Buscá, compará y publicá terrenos en Montevideo, Canelones y todo Uruguay. Filtrá por zona, superficie y precio." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://terrenet.uy/" />
+  <meta property="og:image" content="https://placehold.co/1200x630?text=TerreNet+Terrenos+en+Uruguay" />
   <link rel="stylesheet" href="css/reset.css" />
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/main.css" />
@@ -20,12 +28,13 @@
           <div class="brand-subtitle">Terrenos en venta y alquiler</div>
         </div>
       </a>
-      <button class="nav-toggle" aria-label="Abrir menú">
+      <button class="nav-toggle" aria-label="Abrir menú" aria-controls="mainNav" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
-      <nav class="main-nav">
+      <nav id="mainNav" class="main-nav" role="navigation" aria-label="Main navigation">
         <a href="index.html">Inicio</a>
         <a href="terreno.html">Detalle terreno</a>
+        <a href="acerca.html">Acerca</a>
         <a href="registro.html">Registro</a>
         <button id="btnLoginNav" class="btn btn-primary">Login</button>
       </nav>
@@ -325,6 +334,8 @@
       </div>
     </section>
 
+    <!-- SEO content moved to Acerca page to keep home more visual -->
+
     <section class="results-wrapper">
       <div class="results-header">
         <h2>Terrenos encontrados</h2>
@@ -337,12 +348,12 @@
   </main>
 
   <!-- Modal de Login -->
-  <div id="loginModal" class="modal hidden">
+  <div id="loginModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="loginModalLabel">
     <div class="modal-overlay"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Acceso a Panel</h2>
-        <button id="btnCloseLogin" class="btn-close">&times;</button>
+        <h2 id="loginModalLabel">Acceso a Panel</h2>
+        <button id="btnCloseLogin" class="btn-close" aria-label="Cerrar">&times;</button>
       </div>
       <form id="loginForm" class="login-form">
         <div class="form-group">

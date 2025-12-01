@@ -13,7 +13,15 @@
 <head>
   <meta charset="utf-8" />
   <title>TerreNet – Detalle del terreno</title>
+  <meta name="description" content="Detalle del terreno en TerreNet. Información de ubicación, superficie, servicios, precio y contacto." />
+  <link rel="canonical" href="https://terrenet.uy/terreno.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Open Graph (will be updated dynamically on load via js/detail.js) -->
+  <meta property="og:title" content="TerreNet – Detalle del terreno" />
+  <meta property="og:description" content="Detalle del terreno: ubicación, precio, superficie y contacto." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://terrenet.uy/terreno.html" />
+  <meta property="og:image" content="https://placehold.co/1200x630?text=TerreNet+Terreno" />
   <link rel="stylesheet" href="css/reset.css" />
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/main.css" />
@@ -31,10 +39,10 @@
           <div class="brand-subtitle">Terrenos en venta y alquiler</div>
         </div>
       </a>
-      <button class="nav-toggle" aria-label="Abrir menú">
+      <button class="nav-toggle" aria-label="Abrir menú" aria-controls="mainNav" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
-      <nav class="main-nav">
+      <nav id="mainNav" class="main-nav" role="navigation" aria-label="Main navigation">
         <a href="index.html">Inicio</a>
         <a href="terreno.html">Detalle terreno</a>
         <a href="registro.html">Registro</a>
@@ -53,12 +61,12 @@
     <div id="detail-empty" class="empty" aria-live="assertive"></div>
   </main>
   <!-- Login modal (shared) -->
-  <div id="loginModal" class="modal hidden">
+  <div id="loginModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="loginModalLabel">
     <div class="modal-overlay"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Acceso a Panel</h2>
-        <button id="btnCloseLogin" class="btn-close">&times;</button>
+        <h2 id="loginModalLabel">Acceso a Panel</h2>
+        <button id="btnCloseLogin" class="btn-close" aria-label="Cerrar">&times;</button>
       </div>
       <form id="loginForm" class="login-form">
         <div class="form-group">

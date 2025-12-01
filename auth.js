@@ -1,6 +1,7 @@
 // js/auth.js - Manejo centralizado de autenticación
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
+import { logError } from './utils.js';
 
 // Singleton pattern para evitar múltiples instancias de Supabase client
 let supabase = null;
@@ -29,7 +30,7 @@ export async function getCurrentSession() {
     if (error) throw error;
     return session;
   } catch (err) {
-    console.error("Error getting session:", err);
+    logError("Error getting session:", err);
     return null;
   }
 }
@@ -51,7 +52,7 @@ export async function isUserAdmin(userId) {
     if (error) throw error;
     return Array.isArray(data) && data.length > 0;
   } catch (err) {
-    console.error("Error checking admin status:", err);
+    logError("Error checking admin status:", err);
     return false;
   }
 }
@@ -87,7 +88,7 @@ export async function logout() {
     if (error) throw error;
     return { success: true };
   } catch (err) {
-    console.error("Error logging out:", err);
+    logError("Error logging out:", err);
     return { success: false, error: err.message };
   }
 }

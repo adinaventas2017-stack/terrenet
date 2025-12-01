@@ -1,4 +1,5 @@
 import { getSupabaseClient } from './auth.js';
+import { showStatus } from './utils.js';
 
 const authArea = document.getElementById('auth-area');
 const loginForm = document.getElementById('loginForm');
@@ -41,7 +42,7 @@ if (btnSignIn) {
     const supabase = getSupabaseClient();
     const email = loginEmail.value.trim();
     const pass = loginPass.value;
-    if (!email || !pass) return alert('Email y password requeridos');
+    if (!email || !pass) return showStatus('Email y password requeridos', { type: 'error' });
     btnSignIn.disabled = true;
     btnSignIn.textContent = 'Entrando...';
 
@@ -49,7 +50,7 @@ if (btnSignIn) {
     btnSignIn.disabled = false;
     btnSignIn.textContent = 'Entrar';
 
-    if (error) return alert('Error login: ' + error.message);
+    if (error) return showStatus('Error login: ' + error.message, { type: 'error' });
 
     const { data: admins } = await supabase.from('admins').select('uid').eq('uid', data.user.id).limit(1);
     const isAdmin = Array.isArray(admins) && admins.length > 0;

@@ -8,6 +8,109 @@ const emptyEl = document.getElementById("detail-empty");
 
 setupMenu();
 
+// Lightbox manager (singleton) — idempotent initialization and reusable
+const LightboxManager = (function () {
+  let initialized = false;
+  let overlay, lbImage, lbClose, lbPrev, lbNext, lbThumbs;
+  let images = [];
+  let lbIndex = 0;
+
+  function init() {
+    if (initialized) return;
+    initialized = true;
+    overlay = document.querySelector('.lightbox-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'lightbox-overlay';
+      overlay.innerHTML = `
+        <div class="lightbox-content">
+          <button class="lightbox-close" aria-label="Cerrar">×</button>
+          <button class="lightbox-nav prev" aria-label="Anterior">‹</button>
+          <img class="lightbox-image" src="" alt="">
+          <button class="lightbox-nav next" aria-label="Siguiente">›</button>
+          <div class="lightbox-thumbs"></div>
+        </div>`;
+      document.body.appendChild(overlay);
+    }
+
+    lbImage = overlay.querySelector('.lightbox-image');
+    lbClose = overlay.querySelector('.lightbox-close');
+    lbPrev = overlay.querySelector('.lightbox-nav.prev');
+    lbNext = overlay.querySelector('.lightbox-nav.next');
+    lbThumbs = overlay.querySelector('.lightbox-thumbs');
+
+    lbClose.addEventListener('click', close);
+    lbPrev.addEventListener('click', () => showIndex(-1));
+    lbNext.addEventListener('click', () => showIndex(1));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+    // keyboard handler
+    window.addEventListener('keydown', function onKey(e) {
+      if (!overlay.classList.contains('open')) return;
+      if (e.key === 'ArrowRight') showIndex(1);
+      if (e.key === 'ArrowLeft') showIndex(-1);
+      if (e.key === 'Escape') close();
+    });
+
+    // touch handlers
+    lbImage.addEventListener('touchstart', (e) => { lbImage._touchStartX = e.touches[0].clientX; }, { passive: true });
+    lbImage.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchEndX - (lbImage._touchStartX || 0);
+      if (Math.abs(diff) > 40) { if (diff < 0) showIndex(1); else showIndex(-1); }
+    }, { passive: true });
+  }
+
+  function open(imgs, index = 0) {
+    if (!Array.isArray(imgs) || imgs.length === 0) return;
+    init();
+    images = imgs.slice();
+    lbIndex = (index + images.length) % images.length;
+    renderThumbs();
+    lbImage.src = images[lbIndex] || '';
+    overlay.classList.add('open');
+    document.body.classList.add('no-scroll');
+    updateThumbsActive();
+  }
+
+  function close() {
+    if (!overlay) return;
+    overlay.classList.remove('open');
+    document.body.classList.remove('no-scroll');
+  }
+
+  function showIndex(delta) {
+    if (!images || images.length === 0) return;
+    lbIndex = (lbIndex + delta + images.length) % images.length;
+    lbImage.src = images[lbIndex];
+    updateThumbsActive();
+  }
+
+  function renderThumbs() {
+    if (!lbThumbs) return;
+    lbThumbs.innerHTML = '';
+    images.forEach((url, idx) => {
+      const timg = document.createElement('img');
+      timg.className = 'lightbox-thumb' + (idx === lbIndex ? ' active' : '');
+      timg.src = url;
+      timg.alt = `Thumb ${idx+1}`;
+      timg.addEventListener('click', () => {
+        lbIndex = idx;
+        lbImage.src = images[lbIndex];
+        updateThumbsActive();
+      });
+      lbThumbs.appendChild(timg);
+    });
+  }
+
+  function updateThumbsActive() {
+    if (!lbThumbs) return;
+    lbThumbs.querySelectorAll('.lightbox-thumb').forEach((el, idx) => el.classList.toggle('active', idx === lbIndex));
+  }
+
+  return { open, close, init };
+})();
+
 
 
 function getIdFromUrl() {
@@ -79,7 +182,7 @@ function renderDetalle(t) {
         mainImg.src = url;
         document.querySelectorAll(".thumbnail").forEach(el => el.classList.remove("active"));
         th.classList.add("active");
-        openLightbox(idx);
+        LightboxManager.open(imagenes, idx);
       });
       thumbs.appendChild(th);
     });
@@ -144,102 +247,12 @@ function renderDetalle(t) {
   layout.appendChild(sidebar);
   root.appendChild(layout);
 
-  // LIGHTBOX: Create overlay once and append to root (keeps markup together)
-  if (imagenes.length > 0) {
-    let lightbox = document.querySelector('.lightbox-overlay');
-    if (!lightbox) {
-    lightbox = document.createElement('div');
-    lightbox.className = 'lightbox-overlay';
-    lightbox.innerHTML = `
-      <div class="lightbox-content">
-        <button class="lightbox-close" aria-label="Cerrar">×</button>
-        <button class="lightbox-nav prev" aria-label="Anterior">‹</button>
-        <img class="lightbox-image" src="" alt="">
-        <button class="lightbox-nav next" aria-label="Siguiente">›</button>
-        <div class="lightbox-thumbs"></div>
-      </div>`;
-    document.body.appendChild(lightbox);
-    }
-
-    const lbImage = lightbox.querySelector('.lightbox-image');
-  const lbClose = lightbox.querySelector('.lightbox-close');
-  const lbPrev = lightbox.querySelector('.lightbox-nav.prev');
-  const lbNext = lightbox.querySelector('.lightbox-nav.next');
-  const lbThumbs = lightbox.querySelector('.lightbox-thumbs');
-  let lbIndex = 0;
-
-  function openLightbox(index) {
-    lbIndex = (index + imagenes.length) % imagenes.length;
-    lbImage.src = imagenes[lbIndex];
-    lightbox.classList.add('open');
-    document.body.classList.add('no-scroll');
-    updateThumbsActive();
-    window.addEventListener('keydown', onKeyDown);
-  }
-
-  function closeLightbox() {
-    lightbox.classList.remove('open');
-    document.body.classList.remove('no-scroll');
-    window.removeEventListener('keydown', onKeyDown);
-  }
-
-  function showIndex(delta) {
-    lbIndex = (lbIndex + delta + imagenes.length) % imagenes.length;
-    lbImage.src = imagenes[lbIndex];
-    updateThumbsActive();
-  }
-
-  function onKeyDown(e) {
-    if (!lightbox.classList.contains('open')) return;
-    if (e.key === 'ArrowRight') showIndex(1);
-    if (e.key === 'ArrowLeft') showIndex(-1);
-    if (e.key === 'Escape') closeLightbox();
-  }
-
-  function updateThumbsActive() {
-    lbThumbs.querySelectorAll('.lightbox-thumb').forEach((el, idx) => {
-      el.classList.toggle('active', idx === lbIndex);
-    });
-  }
-
-    // If there are thumbnails, create them inside lightbox thumbs
-    lbThumbs.innerHTML = '';
-  imagenes.forEach((url, idx) => {
-    const timg = document.createElement('img');
-    timg.className = 'lightbox-thumb' + (idx === 0 ? ' active' : '');
-    timg.src = url;
-    timg.alt = `Thumb ${idx+1}`;
-    timg.addEventListener('click', () => openLightbox(idx));
-    lbThumbs.appendChild(timg);
-  });
-
-  // Clicking main image opens lightbox
+  // LIGHTBOX: use singleton LightboxManager to avoid duplicate listeners
   if (imagenes.length > 0) {
     mainImg.classList.add('zoom-cursor');
-    mainImg.addEventListener('click', () => openLightbox(0));
-  }
+    mainImg.addEventListener('click', () => LightboxManager.open(imagenes, 0));
 
-    // Lightbox handlers
-    lbClose.addEventListener('click', closeLightbox);
-    lbPrev.addEventListener('click', () => showIndex(-1));
-    lbNext.addEventListener('click', () => showIndex(1));
-    lightbox.addEventListener('click', (e) => {
-      if (e.target === lightbox) closeLightbox();
-    });
-
-    // Basic swipe handling for mobile
-    let touchStartX = 0;
-    let touchEndX = 0;
-    lbImage.addEventListener('touchstart', (e) => {
-      touchStartX = e.touches[0].clientX;
-    }, { passive: true });
-    lbImage.addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].clientX;
-      const diff = touchEndX - touchStartX;
-      if (Math.abs(diff) > 40) {
-        if (diff < 0) showIndex(1); else showIndex(-1);
-      }
-    }, { passive: true });
+    // thumbnails already wired when created above; manager will handle opening
   }
 
   // ===== FULL WIDTH SECTIONS =====
@@ -379,7 +392,44 @@ function renderDetalle(t) {
   }
 }
 
+// Hydration-aware loader: prefer server-provided data (window.__INITIAL_TERR__), otherwise fall back to client fetch by id
 async function loadDetalle() {
+  // If server-side provided initial data (SSR hydration), use it directly.
+  const initial = window.__INITIAL_TERR__ || null;
+  if (initial) {
+    renderDetalle(initial);
+    // Update title and meta tags, but DO NOT re-inject JSON-LD if server already provided it
+    try {
+      const titleText = initial.titulo ? `${initial.titulo} – TerreNet` : 'Detalle del terreno – TerreNet';
+      document.title = titleText;
+      const desc = initial.descripcion ? (initial.descripcion.substring(0, 160)) : `Terreno en ${initial.zona || initial.departamento || 'Uruguay'} — Superficie ${initial.superficie_total_m2 || ''} m²`;
+      const setMeta = (prop, val, isProperty = true) => {
+        if (!val) return;
+        let sel = isProperty ? `meta[property="${prop}"]` : `meta[name="${prop}"]`;
+        let m = document.querySelector(sel);
+        if (!m) {
+          m = document.createElement('meta');
+          if (isProperty) m.setAttribute('property', prop);
+          else m.setAttribute('name', prop);
+          document.head.appendChild(m);
+        }
+        m.setAttribute('content', val);
+      };
+      setMeta('og:title', titleText);
+      setMeta('description', desc, false);
+      setMeta('og:description', desc);
+      setMeta('og:type', 'article');
+      setMeta('og:url', window.location.href);
+      if (Array.isArray(initial.imagenes) && initial.imagenes.length > 0) setMeta('og:image', initial.imagenes[0]);
+      // Important: if server rendered JSON-LD (script#json-ld-terreno) exists, do NOT modify it.
+      // If it does NOT exist (unlikely in SSR), only then we would consider creating it.
+    } catch (e) {
+      console.debug('detail.js: error updating meta tags during hydration', e);
+    }
+    return;
+  }
+
+  // Client-side path: load by id (static legacy `terreno.html?id=...` or client-only pages)
   const id = getIdFromUrl();
   if (!id) {
     emptyEl.textContent = "Falta el identificador del terreno.";
@@ -397,6 +447,101 @@ async function loadDetalle() {
       return;
     }
     renderDetalle(data);
+    // Update document title and Open Graph meta tags for SEO/share
+    try {
+      const titleText = data.titulo ? `${data.titulo} – TerreNet` : 'Detalle del terreno – TerreNet';
+      document.title = titleText;
+
+      const desc = data.descripcion ? (data.descripcion.substring(0, 160)) : `Terreno en ${data.zona || data.departamento || 'Uruguay'} — Superficie ${data.superficie_total_m2 || ''} m²`;
+
+      const setMeta = (prop, val, isProperty = true) => {
+        if (!val) return;
+        let sel = isProperty ? `meta[property="${prop}"]` : `meta[name="${prop}"]`;
+        let m = document.querySelector(sel);
+        if (!m) {
+          m = document.createElement('meta');
+          if (isProperty) m.setAttribute('property', prop);
+          else m.setAttribute('name', prop);
+          document.head.appendChild(m);
+        }
+        m.setAttribute('content', val);
+      };
+
+      setMeta('og:title', titleText);
+      setMeta('description', desc, false);
+      setMeta('og:description', desc);
+      setMeta('og:type', 'article');
+      setMeta('og:url', window.location.href);
+      if (Array.isArray(data.imagenes) && data.imagenes.length > 0) setMeta('og:image', data.imagenes[0]);
+      // Insert JSON-LD (schema.org) for the terreno so crawlers and social tools can read structured data.
+      try {
+        const buildJsonLd = (t) => {
+          const images = Array.isArray(t.imagenes) && t.imagenes.length > 0 ? t.imagenes : (t.portada_url ? [t.portada_url] : []);
+          const price = (t.precio !== undefined && t.precio !== null && !Number.isNaN(Number(t.precio))) ? Number(t.precio) : undefined;
+          const moneda = t.moneda || 'USD';
+          const priceValidUntil = t.precio_valido_hasta || t.price_valid_until || undefined;
+
+          let availability = undefined;
+          if (t.operacion === 'venta') availability = 'https://schema.org/ForSale';
+          else if (t.operacion === 'alquiler') availability = 'https://schema.org/ForLease';
+
+          const canonicalUrl = (t.slug) ? `${window.location.origin.replace(/\/$/, '')}/terreno/${t.slug}` : window.location.href;
+
+          const listing = {
+            "@context": "https://schema.org",
+            "@type": "RealEstateListing",
+            "url": canonicalUrl,
+            "name": t.titulo || "Terreno en Uruguay",
+            "description": t.descripcion ? String(t.descripcion).substring(0, 300) : undefined,
+            "image": images.length ? images : undefined,
+            "itemOffered": {
+              "@type": "Land",
+              "name": t.titulo || undefined,
+              "landArea": (t.superficie_total_m2 ? { "@type": "QuantitativeValue", "value": Number(t.superficie_total_m2), "unitCode": "M2" } : undefined)
+            },
+            "offers": (price ? { "@type": "Offer", "price": price, "priceCurrency": moneda, "url": canonicalUrl, "availability": availability, "priceValidUntil": priceValidUntil } : undefined),
+            "datePosted": t.created_at || t.fecha_publicacion || undefined,
+            "address": (t.direccion || t.zona || t.departamento) ? { "@type": "PostalAddress", "streetAddress": t.direccion || undefined, "addressLocality": t.zona || undefined, "addressRegion": t.departamento || undefined, "addressCountry": "UY" } : undefined,
+            "seller": (t.contacto_nombre || t.contacto_telefono || t.contacto_email) ? { "@type": "Person", "name": t.contacto_nombre || undefined, "telephone": t.contacto_telefono || undefined, "email": t.contacto_email || undefined } : undefined,
+            "identifier": (t.id !== undefined ? { "@type": "PropertyValue", "propertyID": String(t.id) } : undefined)
+          };
+
+          const clean = (obj) => {
+            if (Array.isArray(obj)) return obj.map(clean).filter(v => v !== undefined);
+            if (obj && typeof obj === 'object') {
+              const out = {};
+              Object.keys(obj).forEach(k => {
+                const v = clean(obj[k]);
+                if (v !== undefined && !(Array.isArray(v) && v.length === 0)) out[k] = v;
+              });
+              return Object.keys(out).length ? out : undefined;
+            }
+            return (obj === null || obj === undefined) ? undefined : obj;
+          };
+
+          return clean(listing);
+        };
+
+        const jsonLd = buildJsonLd(data);
+        if (jsonLd) {
+          let ld = document.getElementById('json-ld-terreno');
+          if (!ld) {
+            ld = document.createElement('script');
+            ld.type = 'application/ld+json';
+            ld.id = 'json-ld-terreno';
+            ld.textContent = JSON.stringify(jsonLd, null, 2);
+            document.head.appendChild(ld);
+          } else {
+            // If the script already exists (e.g., server-side rendered), do not overwrite it.
+          }
+        }
+      } catch (e) {
+        console.debug('detail.js: error injecting JSON-LD', e);
+      }
+    } catch (e) {
+      // non-fatal for rendering
+      console.debug('detail.js: error updating meta tags', e);
+    }
   } catch (err) {
     hideLoading(root);
     emptyEl.textContent = `Error inesperado: ${err.message}`;

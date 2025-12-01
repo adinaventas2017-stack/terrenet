@@ -152,8 +152,8 @@ body {
 .hero {
   background: linear-gradient(135deg, #1f4f7a 0%, #b13333 100%);
   color: white;
-  padding: 4rem 1.5rem;
-  min-height: 500px;
+  padding: 3.2rem 1.5rem;
+  min-height: 420px;
   display: flex;
   align-items: center;
 }
@@ -341,12 +341,15 @@ select:focus {
 
 .results-wrapper {
   max-width: 1200px;
-  margin: 2rem auto;
+  margin: 1.4rem auto 2.4rem;
   padding: 0 1.2rem;
 }
 
 .results-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
 }
 
 .results-header h2 {
@@ -546,6 +549,17 @@ select:focus {
   border: 1px dashed rgba(229, 231, 235, 0.8);
 }
 
+/* Make sure hero CTA area and search feel unified */
+.hero-ctas { margin-top: 1.2rem; display: flex; gap: 0.8rem; align-items: center; }
+.hero-search { box-shadow: 0 8px 30px rgba(15,23,42,0.06); }
+
+/* Small visual polish for cards and results spacing */
+.card { transition: transform 220ms ease, box-shadow 220ms ease; }
+.card:hover { transform: translateY(-6px); }
+
+/* ensure main footer has breathing space */
+.site-footer { margin-top: 2.5rem; padding: 2rem 1.2rem; }
+
 /* ========== RESPONSIVE ========== */
 
 @media (max-width: 1024px) {
@@ -714,5 +728,39 @@ select:focus {
   .hero-copy h1 { font-size: 1.4rem; }
   .card-image { height: 120px; }
   .btn { padding: 0.55rem 0.9rem; }
+}
+
+/* ========== SEO SECTION ========== */
+/* ========== ABOUT / INFO SECTION (moved from home) ========== */
+.about-section {
+  padding: 3rem 1.5rem;
+  background: var(--color-surface);
+  border-top: 1px solid rgba(0,0,0,0.04);
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  margin-top: 2rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.04);
+  border-radius: 10px;
+}
+.about-section .about-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  line-height: 1.65;
+  padding: 0.5rem 0.25rem;
+}
+.about-section h2 { font-size: 1.5rem; margin-bottom: 0.75rem; color: var(--color-text); }
+.about-section h3 { font-size: 1.15rem; margin-top: 1.25rem; color: var(--color-text); }
+.about-section p { font-size: 1rem; color: var(--color-text-muted); margin-bottom: 0.85rem; }
+.about-section .lead { font-size: 1.05rem; color: var(--color-text); line-height: 1.8; margin-bottom: 1rem; }
+.about-benefits ul { list-style: disc; margin-left: 1.1rem; }
+
+@media (min-width: 992px) {
+  .about-section .about-inner {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  .about-section { padding: 3.5rem 1.5rem; }
 }
 

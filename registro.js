@@ -1,4 +1,5 @@
 import { getSupabaseClient } from './auth.js';
+import { logError } from './utils.js';
 import { setupMenu } from './menu.js';
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -70,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (usuarioError) {
                 // Si falla el insert, intentar eliminar el usuario de auth
-                console.error('Error creando usuario en tabla:', usuarioError);
+                logError('Error creando usuario en tabla:', usuarioError);
                 showMessage('Error: ' + (usuarioError.message || 'No se pudo completar el registro.'), 'err');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalHtml;
@@ -84,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
             form.reset();
 
         } catch(err) {
-            console.error('Error:', err);
+            logError('Error:', err);
             showMessage('Error inesperado. Intenta de nuevo.', 'err');
         } finally {
             submitBtn.disabled = false;

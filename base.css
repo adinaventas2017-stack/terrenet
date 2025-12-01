@@ -21,6 +21,13 @@ body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helv
 /* Form error / inline messages */
 .form-error { padding:0.8rem 1rem; background:#fff6f6; border:1px solid #fecaca; color:#991b1b; border-radius:8px; margin-bottom:1rem; font-weight:600; }
 
+/* Generic inline status message (created dynamically) */
+.status-message { padding:0.8rem 1rem; background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:8px; margin-bottom:1rem; font-weight:600; }
+.status-message { word-wrap: break-word; }
+.status-success { background: #ecfdf5; border-color: #bbf7d0; color: #065f46; }
+.status-error { background:#fff6f6; border-color:#fecaca; color:#991b1b; }
+.status-info { background:#f0f9ff; border-color:#bfdbfe; color:#1e40af; }
+
 /* Pagination small helpers */
 .pagination { display:flex; gap:0.5rem; align-items:center; justify-content:center; padding:1rem 0; }
 .pagination .pagination-btn { background: transparent; border:1px solid rgba(0,0,0,0.06); padding:0.45rem 0.75rem; border-radius:8px; cursor:pointer; }
@@ -54,7 +61,7 @@ body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helv
 .section-title { font-weight:700; margin-top:0.6rem; margin-bottom:0.4rem; }
 .form-group { display:flex; flex-direction:column; gap:0.35rem; }
 label { font-weight:600; }
-input[type="text"], input[type="email"], input[type="number"], textarea, select { padding:0.6rem 0.75rem; border:1px solid #e6eef4; border-radius:8px; font-size:0.95rem; }
+input[type="text"], input[type="email"], input[type="number"], textarea, select { padding:0.6rem 0.75rem; border:1px solid #e6eef4; border-radius:8px; font-size:0.95rem; width:100%; box-sizing:border-box; }
 textarea { min-height:80px; }
 .required-indicator { color:#ef4444; margin-left:0.25rem; font-weight:700; }
 
@@ -73,6 +80,12 @@ textarea { min-height:80px; }
 .map-frame { width:100%; height:360px; border-radius:8px; overflow:hidden; border:1px solid #e6eef4; }
 .map-iframe { width:100%; height:100%; border:0; }
 .zoom-cursor { cursor: zoom-in; }
+
+/* Preview grid for image uploads / galleries */
+.preview-grid { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.6rem; }
+.preview-item { width:120px; height:90px; border-radius:8px; overflow:hidden; position:relative; border:1px solid #e6eef4; background:#f8fafc; }
+.preview-item img { width:100%; height:100%; object-fit:cover; display:block; }
+.preview-remove { position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:6px; padding:0.15rem 0.4rem; cursor:pointer; }
 
 /* Admin user cards */
 .usuario-card { padding:1rem; border:1px solid #e5e7eb; border-radius:8px; margin-bottom:0.8rem; background:#fafafa; }
@@ -151,6 +164,44 @@ textarea { min-height:80px; }
 	.form-grid { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 420px) {
+	.usuario-actions { flex-direction: row; flex-wrap: wrap; gap: 0.4rem; }
+	.usuario-actions .btn-aprobar, .usuario-actions .btn-rechazar { width: auto; }
+}
+
+/* Table responsive wrapper */
+.table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* Map and gallery smaller on phones */
+@media (max-width: 420px) {
+	.map-frame { height: 220px; }
+	.card-image { height: 140px; }
+	.form-grid { grid-template-columns: 1fr; }
+	.form-actions { flex-direction: column; align-items: stretch; }
+	.usuario-card { padding: 0.8rem; }
+}
+
+@media (max-width: 360px) {
+	.map-frame { height: 180px; }
+	.card-image { height: 120px; }
+	.brand-mark { width: 32px; height: 32px; }
+}
+
+/* Map responsiveness and preview sizing tweaks */
+@media (max-width: 480px) {
+	.map-frame { height: 260px; }
+	.preview-item { width: 100px; height: 80px; }
+}
+
+@media (max-width: 360px) {
+	.map-frame { height: 220px; }
+	.preview-item { width: 88px; height: 68px; }
+}
+
+@media (min-width: 721px) and (max-width: 1024px) {
+	.map-frame { height: 420px; }
+}
+
 @media (max-width: 360px) {
 	.brand-mark { width: 32px; height: 32px; }
 	.main-nav a, .main-nav button { font-size: 0.98rem; padding: 0.8rem 0.9rem; }
@@ -159,4 +210,17 @@ textarea { min-height:80px; }
 
 @media (min-width: 721px) and (max-width: 1024px) {
 	.main-nav a { font-size: 0.95rem; }
+}
+
+/* Confirm modal small tweaks to match TerreNet styles */
+.confirm-modal-content { max-width: 520px; width: calc(100% - 2rem); border-radius: 12px; padding: 1rem; }
+.confirm-modal-content .modal-header { display:flex; align-items:center; justify-content:space-between; gap:0.5rem; }
+.confirm-modal-content .modal-body { padding: 0.6rem 0; color: #374151; }
+.confirm-modal-content .modal-footer { display:flex; gap:0.5rem; justify-content:flex-end; margin-top:0.8rem; }
+.confirm-modal-content .btn { min-width: 96px; }
+
+@media (max-width: 420px) {
+	.confirm-modal-content { width: calc(100% - 1.2rem); padding: 0.8rem; }
+	.confirm-modal-content .modal-footer { flex-direction: column-reverse; gap:0.6rem; }
+	.confirm-modal-content .btn { width: 100%; }
 }

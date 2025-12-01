@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %></title>
+  <meta name="description" content="<%= description %>">
+  <link rel="canonical" href="<%= canonical %>">
+  <meta property="og:title" content="<%= title %>">
+  <meta property="og:description" content="<%= description %>">
+  <meta property="og:url" content="<%= canonical %>">
+  <% 
+    // Precompute commonly used values to keep template linter-friendly
+    const hasImages = terreno && Array.isArray(terreno.imagenes) && terreno.imagenes.length > 0;
+    const firstImage = hasImages ? terreno.imagenes[0] : null;
+    const images = hasImages ? terreno.imagenes : [];
+    const imagesCount = images.length;
+    const priceDisplay = (terreno && terreno.precio) ? ((terreno.moneda || 'UYU') + ' ' + terreno.precio) : '';
+    const safeTitle = (terreno && terreno.titulo) ? terreno.titulo : '';
+    const safeDescription = (terreno && terreno.descripcion) ? terreno.descripcion : description || '';
+  %>
+  <% if (firstImage) { %>
+    <meta property="og:image" content="<%= firstImage %>">
+  <% } %>
+  <script type="application/ld+json" id="json-ld-terreno"><%- jsonLd %></script>
+
+  <!-- CSS (reuse existing files) -->
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/modal.css">
+  <link rel="stylesheet" href="/css/icons.css">
+  <link rel="stylesheet" href="/css/detail.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/index.html" class="brand">
+      <img class="brand-mark" src="/ChatGPT_Image_30_nov_2025__00_49_11-removebg-preview.png" alt="TerreNet logo">
+        <div class="brand-text">
+          <div class="brand-title">TerreNet</div>
+          <div class="brand-subtitle">Terrenos en venta y alquiler</div>
+        </div>
+      </a>
+      <button class="nav-toggle" aria-label="Abrir menú" aria-controls="mainNav" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav id="mainNav" class="main-nav" role="navigation" aria-label="Main navigation">
+        <a href="/index.html">Inicio</a>
+        <a href="/terreno.html">Detalle terreno</a>
+        <a href="/registro.html">Registro</a>
+        <button id="btnLoginNav" class="btn btn-primary">Login</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero-ctas">
+      <a href="/user.html" class="btn btn-primary">Publicá tu terreno</a>
+      <a href="/registro.html" class="btn btn-outline">Pedí acceso a TerreNet</a>
+    </div>
+
+    <!-- Detail root: server-rendered markup will be placed here by EJS or hydrated by detail.js -->
+    <div id="detail-root" class="detail-layout" aria-live="polite">
+      <!-- Server-rendered content: replicate the visual structure used by terreno.html -->
+      <div class="detail-layout">
+        <div class="detail-gallery">
+          <% if (hasImages) { %>
+            <img class="detail-main-image" src="<%= firstImage %>" alt="<%= safeTitle %>">
+            <% if (imagesCount > 1) { %>
+              <div class="detail-thumbnails">
+                <% images.forEach(function(img, i) { %>
+                  <% const thumbClass = (i === 0) ? 'thumbnail active' : 'thumbnail'; %>
+                  <img src="<%= img %>" class="<%= thumbClass %>" alt="Imagen <%= i + 1 %>">
+                <% }); %>
+              </div>
+            <% } %>
+          <% } else { %>
+            <img class="detail-main-image" src="/js/placeholder.png" alt="Sin imagen">
+          <% } %>
+        </div>
+
+        <aside class="detail-sidebar">
+          <div class="detail-header">
+            <div class="detail-header-top">
+              <h1 class="detail-title"><%= safeTitle %></h1>
+            </div>
+            <div class="detail-price"><%= priceDisplay %></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <div id="detail-map-container"></div>
+    <div id="detail-empty" class="empty" aria-live="assertive"></div>
+  </main>
+
+  <!-- Login modal (shared) -->
+  <div id="loginModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="loginModalLabel">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="loginModalLabel">Acceso a Panel</h2>
+        <button id="btnCloseLogin" class="btn-close" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="loginForm" class="login-form">
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" required placeholder="tu@email.com">
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Contraseña</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary" id="btnLogin">Entrar</button>
+        <p id="loginError" class="error-text"></p>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="/js/index-auth.js"></script>
+  <!-- initial data as JSON to avoid embedding raw EJS inside JS expression (better editor/linters) -->
+  <script id="initial-terreno" type="application/json"><%- initialData %></script>
+  <script type="module">
+    // Hydration: read JSON from script#initial-terreno and parse safely
+    (function(){
+      try {
+        const el = document.getElementById('initial-terreno');
+        window.__INITIAL_TERR__ = el && el.textContent ? JSON.parse(el.textContent) : null;
+      } catch(e) {
+        window.__INITIAL_TERR__ = null;
+        console.debug('Error parsing initial terreno data', e);
+      }
+    })();
+  </script>
+  <script type="module" src="/js/detail.js"></script>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>¿Necesitás ayuda?</strong>
+        <div class="muted mt-1">Matías Rossello – Faro Digital</div>
+        <div class="mt-1">WhatsApp: <a href="https://wa.me/59892014535" target="_blank" class="wa-link">092 014 535</a></div>
+      </div>
+      <div class="text-right small-muted">© TerreNet</div>
+    </div>
+  </footer>
+</body>
+</html>
