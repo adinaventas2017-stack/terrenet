@@ -30,10 +30,10 @@ async function initAuth() {
 
 function renderLoginUI() {
   if (authArea) authArea.setAttribute('data-authenticated', 'false');
-  if (loginForm) loginForm.style.display = 'flex';
-  if (sessionInfo) sessionInfo.style.display = 'none';
-  if (mainContent) mainContent.style.display = 'none';
-  if (header) header.style.display = 'none';
+  if (loginForm) loginForm.classList.remove('hidden');
+  if (sessionInfo) sessionInfo.classList.add('hidden');
+  if (mainContent) mainContent.classList.add('hidden');
+  if (header) header.classList.add('hidden');
 }
 
 if (btnSignIn) {

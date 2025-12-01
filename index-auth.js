@@ -12,13 +12,13 @@ const loginError = document.getElementById("loginError");
 
 // Abrir modal
 btnLoginNav.addEventListener("click", () => {
-  modal.style.display = "flex";
+  modal.classList.remove('hidden');
   loginEmail.focus();
 });
 
 // Cerrar modal
 btnCloseLogin.addEventListener("click", () => {
-  modal.style.display = "none";
+  modal.classList.add('hidden');
   loginForm.reset();
   loginError.textContent = "";
 });
@@ -26,7 +26,7 @@ btnCloseLogin.addEventListener("click", () => {
 // Cerrar modal al hacer click en overlay
 modal.addEventListener("click", (e) => {
   if (e.target === modal || e.target === modal.querySelector(".modal-overlay")) {
-    modal.style.display = "none";
+    modal.classList.add('hidden');
     loginForm.reset();
     loginError.textContent = "";
   }

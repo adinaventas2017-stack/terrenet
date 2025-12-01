@@ -1,5 +1,6 @@
 // js/admin.js
 import { getSupabaseClient, requireAdminAuth, logout } from "./auth.js";
+import { setupMenu } from "./menu.js";
 import { SUPABASE_STORAGE_BUCKET } from "./config.js";
 
 const form = document.getElementById("form-terreno");
@@ -417,7 +418,7 @@ async function cargarTerrenos() {
     btnEditar.type = "button";
     btnEditar.className = "btn-small";
     btnEditar.textContent = "Editar";
-    btnEditar.style.marginRight = "0.25rem";
+    btnEditar.classList.add('mr-1');
     btnEditar.addEventListener("click", () => cargarEnFormulario(t));
     tdAcc.appendChild(btnEditar);
 
@@ -518,52 +519,51 @@ async function loadUsuariosPendientes(){
   const contRoot = document.getElementById('usuariosPendientes');
   if (!contRoot) return;
   contRoot.innerHTML = '<p>Cargando usuarios...</p>';
-  try{
-    const supabase = getSupabaseClient();
-    const { data: usuarios, error } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('estado_verificacion', 'pendiente');
-
-    if(error) throw error;
-    if(!usuarios || usuarios.length === 0){
-      contRoot.innerHTML = '<p style="color:#6b7280;">✅ No hay usuarios pendientes de verificación.</p>';
-      return;
-    }
-
-    contRoot.innerHTML = '';
-    usuarios.forEach(u => {
-      const div = document.createElement('div');
-      div.className = 'usuario-card';
-      div.dataset.userid = u.id;
-      div.style.cssText = 'padding:1rem;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:0.8rem;background:#fafafa;';
-      
-      const empresaText = u.empresa ? '🏢 Empresa' : '👤 Persona';
-      
-      div.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:0.8rem;">
-          <div style="flex:1;">
-            <strong style="font-size:1rem;">${escapeHtml(u.nombre || '')} ${escapeHtml(u.apellido || '')}</strong>
-            <div style="font-size:0.9rem;color:#6b7280;margin-top:0.2rem;">${escapeHtml(u.email || '')}</div>
-            <div style="font-size:0.85rem;color:#9ca3af;margin-top:0.3rem;">${empresaText}</div>
-            ${u.link_verificacion ? `<div style="font-size:0.85rem;margin-top:0.3rem;"><a href="${escapeHtml(u.link_verificacion)}" target="_blank" style="color:#3b82f6;text-decoration:underline;">Ver perfil</a></div>` : ''}
+    try {
+      const supabase = getSupabaseClient();
+      const { data: usuarios, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('estado_verificacion', 'pendiente');
+  
+      if (error) throw error;
+      if (!usuarios || usuarios.length === 0) {
+        contRoot.innerHTML = '<p class="small-muted">✅ No hay usuarios pendientes de verificación.</p>';
+        return;
+      }
+  
+      contRoot.innerHTML = '';
+      usuarios.forEach(u => {
+        const div = document.createElement('div');
+        div.className = 'usuario-card';
+        div.dataset.userid = u.id;
+  
+        const empresaText = u.empresa ? '🏢 Empresa' : '👤 Persona';
+  
+        div.innerHTML = `
+          <div class="usuario-meta-row">
+            <div class="usuario-meta-left">
+              <strong class="usuario-name">${escapeHtml(u.nombre || '')} ${escapeHtml(u.apellido || '')}</strong>
+              <div class="small-muted mt-1">${escapeHtml(u.email || '')}</div>
+              <div class="empresa-text">${empresaText}</div>
+              ${u.link_verificacion ? `<div class="mt-1"><a href="${escapeHtml(u.link_verificacion)}" target="_blank" class="link-profile">Ver perfil</a></div>` : ''}
+            </div>
+            <div class="usuario-actions">
+              <button class="btn-aprobar">✓ Aprobar</button>
+              <button class="btn-rechazar">✕ Rechazar</button>
+            </div>
           </div>
-          <div style="display:flex;gap:0.5rem;">
-            <button class="btn-aprobar" style="background:#10b981;color:white;border:none;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;font-size:0.9rem;">✓ Aprobar</button>
-            <button class="btn-rechazar" style="background:#ef4444;color:white;border:none;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;font-size:0.9rem;">✕ Rechazar</button>
-          </div>
-        </div>
-      `;
-
-      const btnA = div.querySelector('.btn-aprobar');
-      const btnR = div.querySelector('.btn-rechazar');
-      btnA.addEventListener('click', async () => await cambiarEstado(u.id, 'aprobado', div, btnA, btnR));
-      btnR.addEventListener('click', async () => await cambiarEstado(u.id, 'rechazado', div, btnA, btnR));
-
-      contRoot.appendChild(div);
-    });
+        `;
+  
+        const btnA = div.querySelector('.btn-aprobar');
+        const btnR = div.querySelector('.btn-rechazar');
+        btnA.addEventListener('click', async () => await cambiarEstado(u.id, 'aprobado', div, btnA, btnR));
+        btnR.addEventListener('click', async () => await cambiarEstado(u.id, 'rechazado', div, btnA, btnR));
+  
+        contRoot.appendChild(div);
+      });
   } catch(err){
-    contRoot.innerHTML = '<p style="color:#ef4444;">Error cargando usuarios pendientes.</p>';
+    contRoot.innerHTML = '<p class="status-error">Error cargando usuarios pendientes.</p>';
     console.error(err);
   }
 }
@@ -600,8 +600,8 @@ async function cambiarEstado(id, estado, cardEl, btnAccept, btnReject){
       ? '✅ Usuario aprobado' 
       : '❌ Usuario rechazado';
     
-    cardEl.style.background = estado === 'aprobado' ? '#d1fae5' : '#fee2e2';
-    cardEl.innerHTML = `<p style="margin:0;color:${estado === 'aprobado' ? '#059669' : '#991b1b'}">${mensaje}</p>`;
+    cardEl.classList.add(estado === 'aprobado' ? 'usuario-aprobado' : 'usuario-rechazado');
+    cardEl.innerHTML = `<p class="no-margin ${estado === 'aprobado' ? 'status-success' : 'status-error'}">${mensaje}</p>`;
     
     // Remover después de 2 segundos
     setTimeout(() => {
@@ -620,6 +620,7 @@ function escapeHtml(s){ if(!s) return ''; return s.replace(/&/g,'&amp;').replace
 
 // Inicializar panel admin
 document.addEventListener('DOMContentLoaded', async () => {
+  setupMenu();
   const session = await requireAdminAuth();
   if (!session) return;
 
@@ -629,6 +630,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Cargar datos
   loadUsuariosPendientes();
   cargarTerrenos();
+  loadUsersWithPlans();
 
   // Configurar botón de logout
   if (btnSignOut) {
@@ -640,3 +642,91 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 });
+
+// ==================== ADMIN: Usuarios y planes ====================
+async function loadUsersWithPlans(){
+  const cont = document.getElementById('usersPlansContainer');
+  if(!cont) return;
+  cont.innerHTML = '<p>Cargando perfiles...</p>';
+    try {
+      const supabase = getSupabaseClient();
+      const { data: perfiles, error } = await supabase.from('perfiles').select('id,nombre,avatar_url,telefono,email,plan');
+      if (error) throw error;
+      if (!perfiles || perfiles.length === 0) {
+        cont.innerHTML = '<p class="small-muted">No hay perfiles registrados.</p>';
+        return;
+      }
+  
+      const table = document.createElement('table');
+      table.className = 'data-table';
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Contacto</th>
+            <th>Plan</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+  
+      const tbody = table.querySelector('tbody');
+      perfiles.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.className = 'data-row';
+  
+        const tdUser = document.createElement('td');
+        tdUser.innerHTML = `<strong>${escapeHtml(p.nombre || '')}</strong> <div class="small-muted">ID: ${escapeHtml(p.id || '')}</div>`;
+  
+        const tdContact = document.createElement('td');
+        tdContact.innerHTML = `<div class="small-muted">${escapeHtml(p.email || p.telefono || '')}</div>`;
+  
+        const tdPlan = document.createElement('td');
+        const select = document.createElement('select');
+        select.innerHTML = `
+          <option value="FREE">FREE</option>
+          <option value="BASICO">BASICO</option>
+          <option value="PRO">PRO</option>
+          <option value="PREMIUM">PREMIUM</option>
+        `;
+        select.value = (p.plan || 'FREE').toUpperCase();
+        tdPlan.appendChild(select);
+  
+        const tdActions = document.createElement('td');
+        const btnSave = document.createElement('button');
+        btnSave.className = 'btn btn-primary';
+        btnSave.textContent = 'Guardar';
+        btnSave.classList.add('ml-1');
+        btnSave.addEventListener('click', async () => {
+          btnSave.disabled = true;
+          const planSel = select.value;
+          try {
+            const { data, error } = await getSupabaseClient().from('perfiles').update({ plan: planSel }).eq('id', p.id).select();
+            if (error) throw error;
+            btnSave.textContent = 'Guardado';
+            setTimeout(() => btnSave.textContent = 'Guardar', 1500);
+          } catch (err) {
+            alert('Error guardando plan: ' + (err.message || err));
+            console.error(err);
+          } finally {
+            btnSave.disabled = false;
+          }
+        });
+        tdActions.appendChild(btnSave);
+  
+        tr.appendChild(tdUser);
+        tr.appendChild(tdContact);
+        tr.appendChild(tdPlan);
+        tr.appendChild(tdActions);
+        tbody.appendChild(tr);
+      });
+  
+      cont.innerHTML = '';
+      cont.appendChild(table);
+  
+    } catch (err) {
+      console.error('Error cargando perfiles:', err);
+      cont.innerHTML = '<p class="status-error">Error cargando perfiles.</p>';
+    }
+}

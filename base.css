@@ -1,0 +1,162 @@
+/* css/base.css - utilidades base compartidas */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+
+:root { --tn-primary: #b13333; --tn-secondary: #1f4f7a; --tn-accent: #2f855a; --bg:#ffffff; --muted:#6b7280; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 1.2rem; }
+
+html,body{height:100%;}
+body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#111827; background:var(--bg); line-height:1.45; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border: none; padding: 0.6rem 1.1rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 700; }
+.btn-primary { background: linear-gradient(135deg, var(--tn-primary), var(--tn-secondary)); color: #fff; }
+.btn-outline { background: transparent; border: 1px solid rgba(0,0,0,0.08); color: inherit; }
+
+.badge { display:inline-block; padding:0.25rem 0.6rem; border-radius:999px; font-weight:700; font-size:0.75rem; }
+
+.muted { color: var(--muted); }
+
+.tn-loading { padding:1.5rem; text-align:center; color:var(--muted); }
+
+/* Form error / inline messages */
+.form-error { padding:0.8rem 1rem; background:#fff6f6; border:1px solid #fecaca; color:#991b1b; border-radius:8px; margin-bottom:1rem; font-weight:600; }
+
+/* Pagination small helpers */
+.pagination { display:flex; gap:0.5rem; align-items:center; justify-content:center; padding:1rem 0; }
+.pagination .pagination-btn { background: transparent; border:1px solid rgba(0,0,0,0.06); padding:0.45rem 0.75rem; border-radius:8px; cursor:pointer; }
+.pagination .pagination-btn.active { background: var(--tn-secondary); color: #fff; border-color: var(--tn-secondary); }
+.pagination .pagination-btn:disabled { opacity:0.5; cursor:default; }
+
+/* Header / nav common helpers */
+.site-header { background: #fff; border-bottom:1px solid #eef2f6; }
+.site-header .header-inner { max-width:1200px; margin:0 auto; padding:0.8rem 1.2rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.brand { display:flex; align-items:center; gap:0.75rem; text-decoration:none; color:inherit; }
+.brand-mark { height:44px; width:44px; object-fit:contain; }
+.brand-text .brand-title { font-weight:800; font-size:1.05rem; }
+.brand-text .brand-subtitle { font-size:0.86rem; color:var(--tn-secondary); }
+.main-nav { display:flex; gap:0.75rem; align-items:center; }
+.nav-toggle { display:none; background:transparent; border:none; }
+
+/* Footer */
+.site-footer { margin-top:2rem; padding:2rem; background:#f8fafc; border-top:1px solid #e6edf3; }
+.site-footer .footer-inner { max-width:1000px; margin:0 auto; display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; }
+
+/* Hero CTA group */
+.hero-ctas { margin-top:1rem; display:flex; gap:0.75rem; flex-wrap:wrap; }
+
+/* Session block */
+.session-info { display:flex; align-items:center; gap:1rem; }
+.session-info .session-email { font-size:0.95rem; color:#374151; text-align:right; }
+
+/* Form improvements */
+.form-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; }
+.field-full { grid-column: 1 / -1; }
+.section-title { font-weight:700; margin-top:0.6rem; margin-bottom:0.4rem; }
+.form-group { display:flex; flex-direction:column; gap:0.35rem; }
+label { font-weight:600; }
+input[type="text"], input[type="email"], input[type="number"], textarea, select { padding:0.6rem 0.75rem; border:1px solid #e6eef4; border-radius:8px; font-size:0.95rem; }
+textarea { min-height:80px; }
+.required-indicator { color:#ef4444; margin-left:0.25rem; font-weight:700; }
+
+.form-actions { display:flex; gap:0.6rem; align-items:center; }
+.mb-1 { margin-bottom:1rem; }
+
+@media (max-width:720px) {
+	.nav-toggle { display:block; }
+	.main-nav { display:none; }
+}
+
+/* Elements created by JS */
+.card-small-meta { font-size:0.75rem; color:var(--muted); }
+.icon-inline { margin-right:0.4rem; vertical-align:middle; }
+.wa-btn { margin-top:0.8rem; }
+.map-frame { width:100%; height:360px; border-radius:8px; overflow:hidden; border:1px solid #e6eef4; }
+.map-iframe { width:100%; height:100%; border:0; }
+.zoom-cursor { cursor: zoom-in; }
+
+/* Admin user cards */
+.usuario-card { padding:1rem; border:1px solid #e5e7eb; border-radius:8px; margin-bottom:0.8rem; background:#fafafa; }
+.usuario-card .usuario-meta { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; }
+.usuario-card .empresa-text { font-size:0.85rem; color:#9ca3af; margin-top:0.3rem; }
+.usuario-actions { display:flex; gap:0.5rem; }
+.btn-aprobar { background:#10b981; color:white; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer; font-size:0.9rem; }
+.btn-rechazar { background:#ef4444; color:white; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer; font-size:0.9rem; }
+.link-profile { color:#3b82f6; text-decoration:underline; }
+
+/* Small helpers */
+.form-actions { display:flex; gap:0.6rem; align-items:center; }
+.mb-1 { margin-bottom:1rem; }
+
+.visually-hidden { display:none !important; }
+/* Generic hidden helper (use for elements toggled via JS) */
+.hidden { display: none !important; }
+/* Small spacing helpers */
+.mt-1 { margin-top: 0.5rem; }
+
+/* Small muted text */
+.small-muted { font-size:0.85rem; color:var(--muted); }
+
+/* Error text (inline messages) */
+.error-text { color:#dc2626; font-size:0.9rem; margin-top:0.5rem; }
+
+/* WhatsApp / link accent */
+.wa-link { color:#0ea5e9; }
+
+/* Utilities */
+.text-right { text-align: right; }
+
+/* Section title inline variant (icon + title) */
+.section-title-inline { display:flex; align-items:center; gap:0.5rem; font-size:1.1rem; }
+
+/* Narrow centered container for forms and single-column pages */
+.narrow-container { max-width:900px; margin:1.5rem auto; padding: 0 1rem; }
+
+/* Debug helpers (used in debug.html) */
+.debug-input { padding: 0.5rem; width: 250px; border: 1px solid #e5e7eb; border-radius: 4px; }
+.debug-input-wide { padding: 0.5rem; width: 350px; border: 1px solid #e5e7eb; border-radius: 4px; }
+
+/* Admin user card status styles */
+.usuario-aprobado { background: #d1fae5; border-color: #bbf7d0; }
+.usuario-rechazado { background: #fee2e2; border-color: #fecaca; }
+.status-success { color: #059669; }
+.status-error { color: #991b1b; }
+
+.status-info { color: #6366f1; }
+
+/* Admin user row helpers */
+.usuario-meta-row { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; margin-bottom:0.8rem; }
+.usuario-meta-left { flex:1; }
+.usuario-name { font-size:1rem; font-weight:700; }
+.ml-1 { margin-left:0.5rem; }
+.mr-1 { margin-right:0.25rem; }
+
+/* Data table for small admin lists */
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th, .data-table td { padding:0.6rem 0.5rem; border-bottom:1px solid #f3f4f6; text-align:left; }
+/* Utility to reset margin on small messages */
+.no-margin { margin: 0 !important; }
+
+/* Prevent body scroll when overlays are open */
+.no-scroll { overflow: hidden; }
+
+/* Mobile / touch improvements */
+@media (max-width: 420px) {
+	.brand-mark { width: 36px; height: 36px; }
+	.brand-title { font-size: 1rem; }
+	.brand-subtitle { font-size: 0.72rem; }
+	.nav-toggle { padding: 6px; }
+	.main-nav a, .main-nav button { font-size: 1rem; padding: 0.9rem 1rem; }
+	.btn { min-height: 44px; padding: 0.7rem 1rem; }
+	input[type="text"], input[type="number"], select, textarea { font-size: 0.95rem; }
+	.form-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 360px) {
+	.brand-mark { width: 32px; height: 32px; }
+	.main-nav a, .main-nav button { font-size: 0.98rem; padding: 0.8rem 0.9rem; }
+	.btn { font-size: 0.95rem; }
+}
+
+@media (min-width: 721px) and (max-width: 1024px) {
+	.main-nav a { font-size: 0.95rem; }
+}

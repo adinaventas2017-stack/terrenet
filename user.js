@@ -1,6 +1,8 @@
 // js/user.js
 import { getSupabaseClient, requireAuth, logout } from "./auth.js";
+import { setupMenu } from "./menu.js";
 import { SUPABASE_STORAGE_BUCKET } from "./config.js";
+import { formatPrecio, formatSuperficie, placeholderImageUrl } from "./utils.js";
 
 const form = document.getElementById("form-terreno");
 const lista = document.getElementById("lista-terrenos");
@@ -118,129 +120,125 @@ async function manejarArchivos(files) {
   }
 }
 
+// Split form parsing into small focused helpers to improve readability and validation
+function getUbicacionFromForm() {
+  return {
+    departamento: document.getElementById("departamento").value || null,
+    zona: document.getElementById("zona").value.trim() || null,
+    direccion: document.getElementById("direccion").value.trim() || null,
+    lat: document.getElementById("lat").value ? Number(document.getElementById("lat").value) : null,
+    lng: document.getElementById("lng").value ? Number(document.getElementById("lng").value) : null,
+    zona_clase: document.getElementById("zona_clase").value || null
+  };
+}
+
+function getEconomicoFromForm() {
+  return {
+    operacion: document.getElementById("operacion").value || null,
+    moneda: document.getElementById("moneda").value || 'USD',
+    precio: document.getElementById("precio").value ? Number(document.getElementById("precio").value) : null
+  };
+}
+
+function getNormativaFromForm() {
+  return {
+    superficie_total_m2: document.getElementById("superficie_total_m2").value ? Number(document.getElementById("superficie_total_m2").value) : null,
+    superficie_catastral_m2: document.getElementById("superficie_catastral_m2").value ? Number(document.getElementById("superficie_catastral_m2").value) : null,
+    uso_preferente_suelo: document.getElementById("uso_preferente_suelo").value || null,
+    subcategoria_uso: document.getElementById("subcategoria_uso").value.trim() || null,
+    area_diferenciada: document.getElementById("area_diferenciada").value.trim() || null,
+    regimen_gestion_suelo: document.getElementById("regimen_gestion_suelo").value.trim() || null,
+    bien_cautelado: document.getElementById("bien_cautelado").checked,
+    area_especial_consideracion: document.getElementById("area_especial_consideracion").checked,
+    reglamento_vis: document.getElementById("reglamento_vis").checked,
+    planes_especiales: document.getElementById("planes_especiales").value.trim() || null,
+    altura_maxima_m: document.getElementById("altura_maxima_m").value ? Number(document.getElementById("altura_maxima_m").value) : null,
+    altura_minima_m: document.getElementById("altura_minima_m").value ? Number(document.getElementById("altura_minima_m").value) : null,
+    altura_maxima_pisos: document.getElementById("altura_maxima_pisos").value ? Number(document.getElementById("altura_maxima_pisos").value) : null,
+    fos: document.getElementById("fos").value ? Number(document.getElementById("fos").value) : null,
+    retiro_frontal_m: document.getElementById("retiro_frontal_m").value ? Number(document.getElementById("retiro_frontal_m").value) : null,
+    retiro_lateral_m: document.getElementById("retiro_lateral_m").value ? Number(document.getElementById("retiro_lateral_m").value) : null,
+    retiro_posterior_m: document.getElementById("retiro_posterior_m").value ? Number(document.getElementById("retiro_posterior_m").value) : null,
+    galibos: document.getElementById("galibos").value.trim() || null,
+    afectaciones_ochava: document.getElementById("afectaciones_ochava").value.trim() || null,
+    afectaciones_volumetricas: document.getElementById("afectaciones_volumetricas").value.trim() || null
+  };
+}
+
+function getServiciosFromForm() {
+  return {
+    agua: document.getElementById("agua").checked,
+    luz: document.getElementById("luz").checked,
+    saneamiento: document.getElementById("saneamiento").checked,
+    acepta_banco: document.getElementById("acepta_banco").checked,
+    financiacion: document.getElementById("financiacion").checked
+  };
+}
+
+function getContactoFromForm() {
+  return {
+    contacto_nombre: document.getElementById("contacto_nombre").value.trim() || null,
+    contacto_telefono: document.getElementById("contacto_telefono").value.trim() || null,
+    contacto_email: document.getElementById("contacto_email").value.trim() || null,
+    contacto_avatar_url: document.getElementById("contacto_avatar_url").value.trim() || null
+  };
+}
+
+function getLinksFromForm() {
+  return {
+    link_principal: document.getElementById("link_principal").value.trim() || null,
+    link_mercadolibre: document.getElementById("link_mercadolibre").value.trim() || null,
+    link_otro_portal: document.getElementById("link_otro_portal").value.trim() || null
+  };
+}
+
+function getImagenesFromForm() {
+  return {
+    imagenes: imagenesActuales.length > 0 ? imagenesActuales : null,
+    portada_url: imagenesActuales.length > 0 ? imagenesActuales[0] : null
+  };
+}
+
 function getFormDataObject() {
   const id = document.getElementById("terreno_id").value || null;
-
-  const titulo = document.getElementById("titulo").value.trim();
-  const descripcion = document.getElementById("descripcion").value.trim();
-  const departamento = document.getElementById("departamento").value;
-  const zona = document.getElementById("zona").value.trim();
-  const direccion = document.getElementById("direccion").value.trim();
-  const lat = document.getElementById("lat").value ? Number(document.getElementById("lat").value) : null;
-  const lng = document.getElementById("lng").value ? Number(document.getElementById("lng").value) : null;
-  const zona_clase = document.getElementById("zona_clase").value;
-  const operacion = document.getElementById("operacion").value;
-  const precio = document.getElementById("precio").value ? Number(document.getElementById("precio").value) : null;
-  const estado = document.getElementById("estado").value;
-
-  const superficie_total_m2 = Number(document.getElementById("superficie_total_m2").value) || 0;
-  const superficie_catastral_m2 = document.getElementById("superficie_catastral_m2").value
-    ? Number(document.getElementById("superficie_catastral_m2").value)
-    : null;
-
-  const uso_preferente_suelo = document.getElementById("uso_preferente_suelo").value;
-  const subcategoria_uso = document.getElementById("subcategoria_uso").value.trim();
-  const area_diferenciada = document.getElementById("area_diferenciada").value.trim();
-  const regimen_gestion_suelo = document.getElementById("regimen_gestion_suelo").value.trim();
-  const bien_cautelado = document.getElementById("bien_cautelado").checked;
-  const area_especial_consideracion = document.getElementById("area_especial_consideracion").checked;
-  const reglamento_vis = document.getElementById("reglamento_vis").checked;
-  const planes_especiales = document.getElementById("planes_especiales").value.trim();
-
-  const altura_maxima_m = document.getElementById("altura_maxima_m").value
-    ? Number(document.getElementById("altura_maxima_m").value)
-    : null;
-  const altura_minima_m = document.getElementById("altura_minima_m").value
-    ? Number(document.getElementById("altura_minima_m").value)
-    : null;
-  const altura_maxima_pisos = document.getElementById("altura_maxima_pisos").value
-    ? Number(document.getElementById("altura_maxima_pisos").value)
-    : null;
-  const fos = document.getElementById("fos").value ? Number(document.getElementById("fos").value) : null;
-  const retiro_frontal_m = document.getElementById("retiro_frontal_m").value
-    ? Number(document.getElementById("retiro_frontal_m").value)
-    : null;
-  const retiro_lateral_m = document.getElementById("retiro_lateral_m").value
-    ? Number(document.getElementById("retiro_lateral_m").value)
-    : null;
-  const retiro_posterior_m = document.getElementById("retiro_posterior_m").value
-    ? Number(document.getElementById("retiro_posterior_m").value)
-    : null;
-  const galibos = document.getElementById("galibos").value.trim();
-  const afectaciones_ochava = document.getElementById("afectaciones_ochava").value.trim();
-  const afectaciones_volumetricas = document.getElementById("afectaciones_volumetricas").value.trim();
-
-  const agua = document.getElementById("agua").checked;
-  const luz = document.getElementById("luz").checked;
-  const saneamiento = document.getElementById("saneamiento").checked;
-  const acepta_banco = document.getElementById("acepta_banco").checked;
-  const financiacion = document.getElementById("financiacion").checked;
-
+  const titulo = document.getElementById("titulo").value.trim() || null;
+  const descripcion = document.getElementById("descripcion").value.trim() || null;
+  const estado = document.getElementById("estado").value || 'disponible';
   const publicado = document.getElementById("publicado").checked;
   const destacado = document.getElementById("destacado").checked;
-
-  const contacto_nombre = document.getElementById("contacto_nombre").value.trim();
-  const contacto_telefono = document.getElementById("contacto_telefono").value.trim();
-  const contacto_email = document.getElementById("contacto_email").value.trim();
-  const contacto_avatar_url = document.getElementById("contacto_avatar_url").value.trim();
-
-  const link_principal = document.getElementById("link_principal").value.trim();
-  const link_mercadolibre = document.getElementById("link_mercadolibre").value.trim();
-  const link_otro_portal = document.getElementById("link_otro_portal").value.trim();
-
-  const imagenes = imagenesActuales.length > 0 ? imagenesActuales : null;
-  const portada_url = imagenesActuales.length > 0 ? imagenesActuales[0] : null;
 
   return {
     id,
     titulo,
     descripcion,
-    departamento,
-    zona,
-    direccion,
-    lat,
-    lng,
-    zona_clase,
-    operacion,
-    moneda: "USD",
-    precio,
+    ...getUbicacionFromForm(),
+    ...getEconomicoFromForm(),
     estado,
     destacado,
-    superficie_total_m2,
-    superficie_catastral_m2,
-    uso_preferente_suelo,
-    subcategoria_uso,
-    area_diferenciada,
-    regimen_gestion_suelo,
-    bien_cautelado,
-    planes_especiales,
-    altura_maxima_m,
-    altura_minima_m,
-    altura_maxima_pisos,
-    fos,
-    retiro_frontal_m,
-    retiro_lateral_m,
-    retiro_posterior_m,
-    galibos,
-    area_especial_consideracion,
-    reglamento_vis,
-    afectaciones_ochava,
-    afectaciones_volumetricas,
-    agua,
-    luz,
-    saneamiento,
-    acepta_banco,
-    financiacion,
+    ...getNormativaFromForm(),
+    ...getServiciosFromForm(),
     publicado,
-    contacto_nombre,
-    contacto_telefono,
-    contacto_email,
-    link_principal,
-    link_mercadolibre,
-    link_otro_portal,
-    imagenes,
-    portada_url
+    ...getContactoFromForm(),
+    ...getLinksFromForm(),
+    ...getImagenesFromForm()
   };
+}
+
+// Plan limits: FREE 1, BASICO 5, PRO 15, PREMIUM unlimited
+function canUserCreateMoreTerrenos(plan, cantidadTerrenosUsuario) {
+  if (!plan) plan = 'FREE';
+  switch (plan.toUpperCase()) {
+    case 'FREE':
+      return cantidadTerrenosUsuario < 1;
+    case 'BASICO':
+      return cantidadTerrenosUsuario < 5;
+    case 'PRO':
+      return cantidadTerrenosUsuario < 15;
+    case 'PREMIUM':
+      return true;
+    default:
+      return cantidadTerrenosUsuario < 1;
+  }
 }
 
 btnNuevo.addEventListener("click", () => {
@@ -269,8 +267,20 @@ form.addEventListener("submit", async (e) => {
   
   const data = getFormDataObject();
 
+  // inline error box
+  const errorBox = document.getElementById("form-error");
+  if (errorBox) {
+    errorBox.classList.add('hidden');
+    errorBox.textContent = "";
+  }
+
   if (!data.titulo || !data.departamento || !data.operacion || !data.superficie_total_m2) {
-    alert("Completá al menos título, departamento, operación y superficie total.");
+    if (errorBox) {
+      errorBox.classList.remove('hidden');
+      errorBox.textContent = "Completá al menos título, departamento, operación y superficie total.";
+    } else {
+      alert("Completá al menos título, departamento, operación y superficie total.");
+    }
     return;
   }
 
@@ -300,6 +310,38 @@ form.addEventListener("submit", async (e) => {
     const res = await supabase.from("terrenos").update(payloadFiltered).eq("id", data.id);
     error = res.error;
   } else {
+    // Check user's plan and current count before inserting
+    try {
+      const { data: perfil, error: perfilError } = await supabase
+        .from('perfiles')
+        .select('plan')
+        .eq('id', currentUserId)
+        .single();
+
+      if (perfilError) {
+        console.warn('No se pudo leer perfil del usuario:', perfilError);
+      }
+
+      const userPlan = perfil?.plan || 'FREE';
+
+      // count terrenos for user
+      const countRes = await supabase.from('terrenos').select('id', { count: 'exact', head: true }).eq('user_id', currentUserId);
+      const userCount = countRes.count || 0;
+
+      if (!canUserCreateMoreTerrenos(userPlan, userCount)) {
+        if (errorBox) {
+          errorBox.classList.remove('hidden');
+          errorBox.textContent = 'Tu plan actual no permite más publicaciones. Escribinos para ampliar tu plan.';
+        } else {
+          alert('Tu plan actual no permite más publicaciones. Escribinos para ampliar tu plan.');
+        }
+        return;
+      }
+    } catch (e) {
+      console.error('Error comprobando plan usuario:', e);
+      // proceed to attempt insert anyway (fail later if required)
+    }
+
     const res = await supabase.from("terrenos").insert([payloadFiltered]);
     error = res.error;
   }
@@ -307,8 +349,19 @@ form.addEventListener("submit", async (e) => {
   if (error) {
     console.error("Error completo:", error);
     const errMsg = (error?.message) ? error.message : JSON.stringify(error);
-    alert("Error guardando terreno: " + errMsg);
+    if (errorBox) {
+      errorBox.classList.remove('hidden');
+      errorBox.textContent = "Error guardando terreno: " + errMsg;
+    } else {
+      alert("Error guardando terreno: " + errMsg);
+    }
     return;
+  }
+
+  // success
+  if (errorBox) {
+    errorBox.classList.add('hidden');
+    errorBox.textContent = "";
   }
 
   btnNuevo.click();
@@ -317,6 +370,7 @@ form.addEventListener("submit", async (e) => {
 
 // Cargar SOLO los terrenos del usuario actual
 async function cargarTerrenos() {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("terrenos")
     .select("*")
@@ -370,7 +424,7 @@ async function cargarTerrenos() {
     btnEditar.type = "button";
     btnEditar.className = "btn-small";
     btnEditar.textContent = "Editar";
-    btnEditar.style.marginRight = "0.25rem";
+    btnEditar.classList.add('mr-1');
     btnEditar.addEventListener("click", () => cargarEnFormulario(t));
     tdAcc.appendChild(btnEditar);
 
@@ -463,6 +517,7 @@ function cargarEnFormulario(t) {
 
 // Inicializar
 document.addEventListener("DOMContentLoaded", async () => {
+  setupMenu();
   const session = await requireAuth();
   if (!session) return;
 

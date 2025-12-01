@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TerreNet – Debug</title>
+    <link rel="stylesheet" href="css/reset.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/modal.css" />
+    <link rel="stylesheet" href="css/icons.css" />
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -61,7 +66,55 @@
     </style>
 </head>
 <body>
-    <h1>🐛 Debug TerreNet System</h1>
+        <header class="site-header">
+            <div class="header-inner">
+                <a href="index.html" class="brand">
+                    <img class="brand-mark" src="ChatGPT_Image_30_nov_2025__00_49_11-removebg-preview.png" alt="TerreNet logo" />
+                    <div class="brand-text">
+                        <div class="brand-title">TerreNet</div>
+                        <div class="brand-subtitle">Terrenos en venta y alquiler</div>
+                    </div>
+                </a>
+                <button class="nav-toggle" aria-label="Abrir menú"><span></span><span></span><span></span></button>
+                <nav class="main-nav">
+                    <a href="index.html">Inicio</a>
+                    <a href="terreno.html">Detalle terreno</a>
+                    <a href="registro.html">Registro</a>
+                    <button id="btnLoginNav" class="btn btn-primary">Login</button>
+                </nav>
+                <div class="session-info hidden" id="sessionBlock">
+                    <div class="session-email" id="sessionEmail"></div>
+                    <button id="btnSignOut" type="button" class="btn btn-outline">Salir</button>
+                </div>
+            </div>
+        </header>
+
+        <h1>🐛 Debug TerreNet System</h1>
+
+        <!-- Login modal (shared) -->
+        <div id="loginModal" class="modal hidden">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Acceso a Panel</h2>
+                    <button id="btnCloseLogin" class="btn-close">&times;</button>
+                </div>
+                <form id="loginForm" class="login-form">
+                    <div class="form-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" required placeholder="tu@email.com" />
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Contraseña</label>
+                        <input type="password" id="loginPassword" required placeholder="••••••••" />
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="btnLogin">Entrar</button>
+                    <p id="loginError" class="error-text"></p>
+                </form>
+            </div>
+        </div>
+
+        <script type="module" src="js/index-auth.js"></script>
 
     <div class="debug-section">
         <h2>Session & Auth</h2>
@@ -95,16 +148,16 @@
 
     <div class="debug-section">
         <h2>Test User Login</h2>
-        <input type="email" id="testEmail" placeholder="email@example.com" style="padding: 0.5rem; width: 250px; border: 1px solid #e5e7eb; border-radius: 4px;">
-        <input type="password" id="testPassword" placeholder="password" style="padding: 0.5rem; width: 250px; border: 1px solid #e5e7eb; border-radius: 4px;">
+        <input type="email" id="testEmail" placeholder="email@example.com" class="debug-input">
+        <input type="password" id="testPassword" placeholder="password" class="debug-input">
         <button onclick="testLogin()">Test Login</button>
         <pre id="loginOutput">Waiting...</pre>
     </div>
 
     <div class="debug-section">
         <h2>🔑 Hacer Admin</h2>
-        <p style="color: #6b7280; margin-bottom: 1rem;">Copia tu UserID de arriba y pégalo aquí para hacerte admin:</p>
-        <input type="text" id="userIdToAdmin" placeholder="UUID del usuario (ej: abc123...)" style="padding: 0.5rem; width: 350px; border: 1px solid #e5e7eb; border-radius: 4px;">
+        <p class="small-muted mb-1">Copia tu UserID de arriba y pégalo aquí para hacerte admin:</p>
+        <input type="text" id="userIdToAdmin" placeholder="UUID del usuario (ej: abc123...)" class="debug-input-wide">
         <button onclick="makeAdmin()">Hacer Admin</button>
         <pre id="adminOutput">Esperando...</pre>
     </div>
@@ -112,6 +165,10 @@
     <script type="module">
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
         import { SUPABASE_URL, SUPABASE_ANON_KEY } from './js/config.js';
+        import { setupMenu } from './js/menu.js';
+
+        // Initialize shared header/menu behaviour
+        setupMenu();
 
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

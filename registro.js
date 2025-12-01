@@ -1,6 +1,8 @@
 import { getSupabaseClient } from './auth.js';
+import { setupMenu } from './menu.js';
 
 document.addEventListener('DOMContentLoaded', function() {
+    setupMenu();
     const form = document.getElementById('registroForm');
     const mensaje = document.getElementById('mensaje');
     const submitBtn = form.querySelector('button[type="submit"]');
@@ -8,9 +10,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function showMessage(text, type = 'info'){
         mensaje.textContent = text;
         mensaje.className = 'mensaje';
-        if(type === 'ok') mensaje.style.color = '#10b981'; // green
-        else if(type === 'err') mensaje.style.color = '#ef4444'; // red
-        else mensaje.style.color = '#6366f1'; // blue
+        mensaje.classList.remove('status-success','status-error','status-info');
+        if(type === 'ok') mensaje.classList.add('status-success');
+        else if(type === 'err') mensaje.classList.add('status-error');
+        else mensaje.classList.add('status-info');
     }
 
     form.addEventListener('submit', async function(e){

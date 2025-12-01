@@ -1,39 +1,14 @@
 ﻿// js/detail.js - Renderizado de página detalle con nueva estructura v2.2
 import { getSupabaseClient } from "./auth.js";
 import { setupMenu } from "./menu.js";
+import { getServiceIcon, formatPrecio, formatSuperficie, placeholderImageUrl, showLoading, hideLoading, createServiceChip } from "./utils.js";
 const root = document.getElementById("detail-root");
 const mapContainer = document.getElementById("detail-map-container");
 const emptyEl = document.getElementById("detail-empty");
-let loadingEl;
 
 setupMenu();
 
-function getServiceIcon(serviceName) {
-  const icons = {
-    "Agua": '<svg class="service-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.32 0z"/></svg>',
-    "Luz": '<svg class="service-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-    "Saneamiento": '<svg class="service-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m0 18h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-4m0 18V9"/></svg>',
-    "Banco": '<svg class="service-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7v5h20V7l-10-5z M2 12h20v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5z"/></svg>',
-    "Financiación": '<svg class="service-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22m11-11H1m18-4h-2a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2"/></svg>'
-  };
-  return icons[serviceName] || '';
-}
 
-function showLoading() {
-  if (!loadingEl) {
-    loadingEl = document.createElement("div");
-    loadingEl.textContent = "Cargando terreno...";
-    loadingEl.style.cssText = "padding: 2rem; text-align: center; color: #6b7280;";
-    root.innerHTML = "";
-    root.appendChild(loadingEl);
-  }
-  emptyEl.textContent = "";
-}
-
-function hideLoading() {
-  if (loadingEl) loadingEl.remove();
-  loadingEl = null;
-}
 
 function getIdFromUrl() {
   return new URLSearchParams(window.location.search).get("id");
@@ -87,7 +62,7 @@ function renderDetalle(t) {
     mainImg.src = imagenes[0];
     mainImg.alt = t.titulo;
   } else {
-    mainImg.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23e5e7eb' width='400' height='400'/%3E%3C/svg%3E";
+    mainImg.src = placeholderImageUrl(600, 400, 'Sin imagen');
     mainImg.alt = "Sin imagen";
   }
   gallery.appendChild(mainImg);
@@ -135,7 +110,7 @@ function renderDetalle(t) {
     // Price element
     const price = document.createElement("div");
     price.className = "detail-price";
-  price.textContent = t.precio ? `${t.moneda} ${Number(t.precio).toLocaleString("es-UY")}` : "A consultar";
+  price.textContent = formatPrecio(t.precio, t.moneda);
   header.appendChild(price);
     // Removed TerreNet suggestion model from UI
 
@@ -152,7 +127,7 @@ function renderDetalle(t) {
   const specsData = [
     { label: "Departamento", value: t.departamento },
     { label: "Operación", value: t.operacion.charAt(0).toUpperCase() + t.operacion.slice(1) },
-    { label: "Superficie", value: t.superficie_total_m2 ? `${t.superficie_total_m2} m` : "" },
+    { label: "Superficie", value: formatSuperficie(t.superficie_total_m2) },
     { label: "Zona", value: t.zona || t.zona_clase || "" }
   ];
 
@@ -197,14 +172,14 @@ function renderDetalle(t) {
     lbIndex = (index + imagenes.length) % imagenes.length;
     lbImage.src = imagenes[lbIndex];
     lightbox.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    document.body.classList.add('no-scroll');
     updateThumbsActive();
     window.addEventListener('keydown', onKeyDown);
   }
 
   function closeLightbox() {
     lightbox.classList.remove('open');
-    document.body.style.overflow = '';
+    document.body.classList.remove('no-scroll');
     window.removeEventListener('keydown', onKeyDown);
   }
 
@@ -240,7 +215,7 @@ function renderDetalle(t) {
 
   // Clicking main image opens lightbox
   if (imagenes.length > 0) {
-    mainImg.style.cursor = 'zoom-in';
+    mainImg.classList.add('zoom-cursor');
     mainImg.addEventListener('click', () => openLightbox(0));
   }
 
@@ -324,10 +299,7 @@ function renderDetalle(t) {
     servList.className = "services-list";
 
     servicios.forEach(s => {
-      const chip = document.createElement("span");
-      chip.className = "service-chip";
-      chip.innerHTML = `${getServiceIcon(s)}<span>${s}</span>`;
-      servList.appendChild(chip);
+      servList.appendChild(createServiceChip(s, 18));
     });
 
     servSec.appendChild(servList);
@@ -372,8 +344,7 @@ function renderDetalle(t) {
     wa.href = `https://wa.me/${telefono.replace(/[^0-9]/g, "")}`;
     wa.target = "_blank";
     wa.rel = "noopener noreferrer";
-    wa.className = "btn btn-primary";
-    wa.style.marginTop = "0.8rem";
+    wa.classList.add("btn", "btn-primary", "wa-btn");
     wa.textContent = "Escribir por WhatsApp";
     contactBox.appendChild(wa);
   }
@@ -398,7 +369,12 @@ function renderDetalle(t) {
 
     const frame = document.createElement("div");
     frame.className = "map-frame";
-    frame.innerHTML = `<iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="${mapsUrl}" style="width:100%; height:100%; border:none;"></iframe>`;
+    const iframeEl = document.createElement('iframe');
+    iframeEl.loading = 'lazy';
+    iframeEl.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
+    iframeEl.src = mapsUrl;
+    iframeEl.className = 'map-iframe';
+    frame.appendChild(iframeEl);
     mapContainer.appendChild(frame);
   }
 }
@@ -410,11 +386,11 @@ async function loadDetalle() {
     root.innerHTML = "";
     return;
   }
-  showLoading();
+  showLoading(root, 'Cargando terreno...');
   try {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase.from("terrenos").select("*").eq("id", id).single();
-    hideLoading();
+    hideLoading(root);
     if (error || !data) {
       emptyEl.textContent = error?.message ? `Error: ${error.message}` : "No encontramos este terreno.";
       root.innerHTML = "";
@@ -422,7 +398,7 @@ async function loadDetalle() {
     }
     renderDetalle(data);
   } catch (err) {
-    hideLoading();
+    hideLoading(root);
     emptyEl.textContent = `Error inesperado: ${err.message}`;
     root.innerHTML = "";
   }

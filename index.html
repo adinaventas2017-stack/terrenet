@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TerreNet – Encontrá tu próximo terreno</title>
   <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/main.css" />
   <link rel="stylesheet" href="css/modal.css" />
   <link rel="stylesheet" href="css/icons.css" />
@@ -26,7 +27,7 @@
         <a href="index.html">Inicio</a>
         <a href="terreno.html">Detalle terreno</a>
         <a href="registro.html">Registro</a>
-        <button id="btnLoginNav" class="btn btn-primary" style="cursor:pointer;">Login</button>
+        <button id="btnLoginNav" class="btn btn-primary">Login</button>
       </nav>
     </div>
   </header>
@@ -41,6 +42,10 @@
             Filtrá por ubicación, metros y precio. Después, si querés, afinás con más filtros
             técnicos como servicios y normativa básica.
           </p>
+          <div class="hero-ctas">
+            <a href="user.html" class="btn btn-primary">Publicá tu terreno</a>
+            <a href="registro.html" class="btn btn-outline">Pedí acceso a TerreNet</a>
+          </div>
         </div>
 
         <form id="search-form" class="hero-search">
@@ -49,9 +54,25 @@
               <label for="departamento">Departamento</label>
               <select id="departamento" name="departamento">
                 <option value="">Todos</option>
-                <option value="Montevideo">Montevideo</option>
+                <option value="Artigas">Artigas</option>
                 <option value="Canelones">Canelones</option>
+                <option value="Cerro Largo">Cerro Largo</option>
+                <option value="Colonia">Colonia</option>
+                <option value="Durazno">Durazno</option>
+                <option value="Flores">Flores</option>
+                <option value="Florida">Florida</option>
+                <option value="Lavalleja">Lavalleja</option>
                 <option value="Maldonado">Maldonado</option>
+                <option value="Montevideo">Montevideo</option>
+                <option value="Paysandú">Paysandú</option>
+                <option value="Río Negro">Río Negro</option>
+                <option value="Rivera">Rivera</option>
+                <option value="Rocha">Rocha</option>
+                <option value="Salto">Salto</option>
+                <option value="San José">San José</option>
+                <option value="Soriano">Soriano</option>
+                <option value="Tacuarembó">Tacuarembó</option>
+                <option value="Treinta y Tres">Treinta y Tres</option>
               </select>
             </div>
 
@@ -311,11 +332,12 @@
       </div>
       <div id="results" class="results" aria-live="polite"></div>
       <div id="empty-message" class="empty" aria-live="assertive"></div>
+      <div id="pagination" class="pagination" aria-hidden="false"></div>
     </section>
   </main>
 
   <!-- Modal de Login -->
-  <div id="loginModal" class="modal" style="display:none;">
+  <div id="loginModal" class="modal hidden">
     <div class="modal-overlay"></div>
     <div class="modal-content">
       <div class="modal-header">
@@ -332,11 +354,21 @@
           <input type="password" id="loginPassword" required placeholder="••••••••" />
         </div>
         <button type="submit" class="btn btn-primary" id="btnLogin">Entrar</button>
-        <p id="loginError" style="color:#dc2626;font-size:0.9rem;margin-top:1rem;"></p>
+        <p id="loginError" class="error-text"></p>
       </form>
     </div>
   </div>
 
   <script type="module" src="js/client.js"></script>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>¿Necesitás ayuda?</strong>
+        <div class="muted mt-1">Matías Rossello – Faro Digital</div>
+        <div class="mt-1">WhatsApp: <a href="https://wa.me/59892014535" target="_blank" class="wa-link">092 014 535</a></div>
+      </div>
+      <div class="text-right small-muted">© TerreNet</div>
+    </div>
+  </footer>
 </body>
 </html>

@@ -2,6 +2,7 @@
 import { getSupabaseClient } from "./auth.js";
 import { setupMenu } from "./menu.js";
 import "./index-auth.js"; // Manejo de login
+import { formatPrecio, formatSuperficie, placeholderImageUrl, showLoading, hideLoading, createServiceChip } from "./utils.js";
 
 // Heroicons SVG helper para servicios
 function getServiceIcon(serviceName) {
@@ -18,6 +19,45 @@ function getServiceIcon(serviceName) {
 const form = document.getElementById("search-form");
 const resultsEl = document.getElementById("results");
 const emptyEl = document.getElementById("empty-message");
+const paginationEl = document.getElementById("pagination");
+let currentPage = 1;
+const PAGE_SIZE = 20;
+
+function renderPagination(totalCount) {
+  if (!paginationEl) return;
+  paginationEl.innerHTML = '';
+  const totalPages = Math.max(1, Math.ceil((totalCount || 0) / PAGE_SIZE));
+  const createBtn = (text, disabled) => {
+    const b = document.createElement('button');
+    b.className = 'btn btn-ghost pagination-btn';
+    b.textContent = text;
+    if (disabled) b.disabled = true;
+    return b;
+  };
+
+  const prev = createBtn('Anterior', currentPage <= 1);
+  prev.addEventListener('click', () => {
+    if (currentPage > 1) { currentPage -= 1; loadTerrenosFromForm(); }
+  });
+  paginationEl.appendChild(prev);
+
+  const from = Math.max(1, currentPage - 2);
+  const to = Math.min(totalPages, from + 4);
+  for (let p = from; p <= to; p++) {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-ghost pagination-btn' + (p === currentPage ? ' active' : '');
+    btn.textContent = String(p);
+    if (p === currentPage) btn.disabled = true;
+    btn.addEventListener('click', () => { currentPage = p; loadTerrenosFromForm(); });
+    paginationEl.appendChild(btn);
+  }
+
+  const next = createBtn('Siguiente', currentPage >= totalPages);
+  next.addEventListener('click', () => {
+    if (currentPage < totalPages) { currentPage += 1; loadTerrenosFromForm(); }
+  });
+  paginationEl.appendChild(next);
+}
 const btnLimpiar = document.getElementById("btn-limpiar");
 const btnAdvanced = document.getElementById("btn-advanced");
 const advancedFilters = document.getElementById("advanced-filters");
@@ -51,6 +91,7 @@ function sugerirPrecio(terreno) {
   if (terreno.zona_clase === "premium") factorZona = 1.4;
   else if (terreno.zona_clase === "periferica") factorZona = 0.85;
 
+  
   const edificabilidadFactor = terreno.edificabilidad_factor ?? 1;
   const factorEdif = 1 + edificabilidadFactor * 0.1;
 
@@ -74,7 +115,9 @@ function renderTerrenos(data) {
   emptyEl.textContent = "";
 
   if (!data || data.length === 0) {
-    emptyEl.textContent = "No hay terrenos con esos filtros por ahora.";
+    emptyEl.innerHTML = `No se encontraron terrenos. Probá aflojando filtros o <button id="clear-filters" class="btn btn-ghost">limpiando</button>`;
+    const btn = document.getElementById('clear-filters');
+    if (btn) btn.addEventListener('click', () => { form.reset(); currentPage = 1; loadTerrenosFromForm(); });
     return;
   }
 
@@ -92,7 +135,7 @@ function renderTerrenos(data) {
       img.alt = t.titulo;
     } else {
       img.alt = "Terreno sin imagen";
-      img.src = "https://placehold.co/400x300?text=Sin+imagen";
+      img.src = placeholderImageUrl(400, 300, 'Sin imagen');
     }
     card.appendChild(img);
 
@@ -117,13 +160,11 @@ function renderTerrenos(data) {
     const priceRow = document.createElement("div");
     priceRow.className = "price-row";
 
-    const realPrice = t.precio ? `${t.moneda} ${Number(t.precio).toLocaleString("es-UY")}` : "A consultar";
+    const realPrice = formatPrecio(t.precio, t.moneda);
     const spanPrice = document.createElement("span");
     spanPrice.className = "price";
     spanPrice.textContent = realPrice;
     priceRow.appendChild(spanPrice);
-
-    // Removed: model price suggestion from public search cards
 
     body.appendChild(priceRow);
 
@@ -135,7 +176,7 @@ function renderTerrenos(data) {
     meta.appendChild(loc);
 
     const sup = document.createElement("span");
-    sup.textContent = `${t.superficie_total_m2} m²`;
+    sup.textContent = formatSuperficie(t.superficie_total_m2);
     meta.appendChild(sup);
 
     if (t.padron) {
@@ -157,11 +198,7 @@ function renderTerrenos(data) {
       const serv = document.createElement("div");
       serv.className = "services";
       servicios.forEach(s => {
-        const span = document.createElement("span");
-        span.className = "service-chip";
-        span.innerHTML = `${getServiceIcon(s)}<span>${s}</span>`;
-        span.setAttribute("aria-label", `Disponible: ${s}`);
-        serv.appendChild(span);
+        serv.appendChild(createServiceChip(s, 14));
       });
       body.appendChild(serv);
     }
@@ -170,8 +207,7 @@ function renderTerrenos(data) {
     footer.className = "card-footer";
 
     const smallMeta = document.createElement("div");
-    smallMeta.style.fontSize = "0.75rem";
-    smallMeta.style.color = "#6b7280";
+    smallMeta.className = 'card-small-meta';
     smallMeta.textContent = t.contacto_nombre ? `Contacto: ${t.contacto_nombre}` : "Asesor inmobiliario";
     footer.appendChild(smallMeta);
 
@@ -180,7 +216,7 @@ function renderTerrenos(data) {
     link.href = `terreno.html?id=${t.id}`;
     link.setAttribute("aria-label", `Ver detalle de terreno ${t.titulo}`);
     link.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:0.4rem;">
+      <svg class="icon-inline" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0"></path>
       </svg>
       Ver detalle
@@ -196,10 +232,15 @@ function renderTerrenos(data) {
 
 async function loadTerrenosFromForm(event) {
   if (event) event.preventDefault();
-
   const supabase = getSupabaseClient();
   const formData = new FormData(form);
-  let query = supabase.from("terrenos").select("*").eq("publicado", true);
+  // show loading state
+  showLoading(resultsEl, 'Buscando terrenos...');
+  resultsEl.innerHTML = '';
+  emptyEl.textContent = '';
+
+  // base query with count for pagination
+  let query = supabase.from("terrenos").select("*", { count: 'exact' }).eq("publicado", true);
 
   // --- FILTROS BÁSICOS ---
   const departamento = formData.get("departamento");
@@ -275,22 +316,28 @@ async function loadTerrenosFromForm(event) {
   if (document.getElementById("acepta_banco").checked) query = query.eq("acepta_banco", true);
   if (document.getElementById("financiacion").checked) query = query.eq("financiacion", true);
 
-  const { data, error } = await query.order("created_at", { ascending: false });
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const end = start + PAGE_SIZE - 1;
+  const { data, error, count } = await query.order("created_at", { ascending: false }).range(start, end);
+  hideLoading(resultsEl);
 
   if (error) {
     console.error(error);
     emptyEl.textContent = "Error cargando terrenos.";
     resultsEl.innerHTML = "";
+    renderPagination(0);
     return;
   }
 
   renderTerrenos(data);
+  renderPagination(count || (data ? data.length : 0));
 }
 
 
-form.addEventListener("submit", loadTerrenosFromForm);
+form.addEventListener("submit", (e) => { currentPage = 1; loadTerrenosFromForm(e); });
 
 btnLimpiar.addEventListener("click", () => {
+  currentPage = 1;
   form.reset();
   loadTerrenosFromForm();
 });
